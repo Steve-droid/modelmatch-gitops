@@ -1,0 +1,16 @@
+# Helm
+charts/*.tgz
+*/charts/*.tgz
+requirements.lock
+Chart.lock
+
+# Secrets (never commit rendered secrets)
+*-secret.yaml
+secrets.yaml
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
