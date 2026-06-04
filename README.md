@@ -3,7 +3,7 @@
 > **SHELL repo (inactive).** Activates when the GitOps stories begin (after infra + images exist).
 > This README describes the intended shape. Part of the [ModelMatch portfolio build](../CLAUDE.md);
 > spec in [`../docs/planning/architecture.md`](../docs/planning/architecture.md) §12–§13 and
-> `../instructions/lesson-03`.
+> `../docs/instructions/lesson-03`.
 
 ## Overview
 

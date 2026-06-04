@@ -17,4 +17,4 @@ wired to `/healthz` + `/readyz`. DB migrations run as their own **Job/Helm hook*
 The **proactive advisor is a separable subchart** toggled in one place (a `FEATURE_PROACTIVE_ADVISOR`
 values flag, not a code change) — droppable by demo time with no core impact.
 
-See the umbrella `../CLAUDE.md` and `../docs/planning/architecture.md` §12–§13 + `../instructions/lesson-03`.
+See the umbrella `../CLAUDE.md` and `../docs/planning/architecture.md` §12–§13 + `../docs/instructions/lesson-03`.
