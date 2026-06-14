@@ -14,3 +14,6 @@ secrets.yaml
 .DS_Store
 .idea/
 .vscode/
+
+# draw.io backups
+*drawio.bkp

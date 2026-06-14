@@ -1,0 +1,66 @@
+# P11 — F5 NGINX Ingress Controller (OSS) as an ArgoCD child app under the root App-of-Apps.
+#
+# WHY F5, NOT kubernetes/ingress-nginx: the community `kubernetes/ingress-nginx` project was ARCHIVED
+# 2026-03-24 and is end-of-life (no further releases or security fixes) — its README says don't deploy it
+# for new installs. We use the maintained F5 NGINX Ingress Controller (OSS) instead. Same architecture:
+# one NGINX controller, one LoadBalancer Service, standard Kubernetes Ingress (no Gateway API rewrite).
+# Refs: https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/ ; https://github.com/nginx/kubernetes-ingress
+#
+# This is the cluster's SINGLE ingress LB: controller.service.type=LoadBalancer makes the EKS
+# cloud-controller-manager provision one Classic ELB. Routing/TLS (Ingress objects + ClusterIssuer) is
+# P15 — P11 only gets the controller Healthy. Keep it to ONE LB (cert-manager/ESO provision none).
+#
+# STANDARD INGRESS ONLY: enableCustomResources=false + skipCrds=true. We use plain Kubernetes `Ingress`
+# (path-based, P15), NOT F5's VirtualServer/TransportServer/Policy CRDs — so we don't install those CRDs
+# (F5 documents --skip-crds for exactly this case). Pods still become Ready (the "needs CRDs to be Ready"
+# caveat only applies when enableCustomResources=true). Flip both true later if we ever want F5 CRs.
+#
+# DAY-END ORPHAN NOTE: the ELB is created by the in-cluster cloud-controller-manager, NOT tracked by
+# Terraform. Before a platform `terraform destroy`, delete this app/Service first so the CCM releases the
+# LB — otherwise it orphans. (Carried in the orphan ritual.)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx-ingress
+  namespace: argocd
+  # Cascade-delete the controller's resources if this Application is pruned (YAML removed from Git).
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    # HTTP Helm repo (F5 still publishes the latest here) — keeps ArgoCD sync anonymous + simple, no OCI
+    # registry registration. The docs-preferred OCI source is oci://ghcr.io/nginx/charts/nginx-ingress.
+    repoURL: https://helm.nginx.com/stable
+    chart: nginx-ingress
+    targetRevision: 2.6.0 # F5 NGINX Ingress Controller OSS 5.5.0 — pinned (latest stable as of 2026-06-14)
+    helm:
+      releaseName: nginx-ingress
+      skipCrds: true # no F5 CRDs (paired with controller.enableCustomResources=false below)
+      values: |
+        controller:
+          kind: deployment
+          nginxplus: false # OSS mode (not NGINX Plus)
+          replicaCount: 1
+          enableCustomResources: false # standard K8s Ingress only — no F5 VirtualServer/TransportServer CRs
+          service:
+            type: LoadBalancer # the single ingress LB
+          # The chart defaults requests (100m/128Mi) but leaves limits unset — cap it (repo rule: limits
+          # on EVERY container; P10 lean precedent for a 2-node t3a.medium cluster).
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nginx-ingress
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      # ArgoCD owns the namespace lifecycle (gitops-only P11 — no Terraform ns).
+      - CreateNamespace=true
