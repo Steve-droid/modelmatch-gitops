@@ -1,0 +1,32 @@
+# Frontend subchart defaults. The umbrella's `frontend:` block overrides these when
+# rendered as part of the product chart; these values also make the subchart render
+# standalone (`helm template charts/modelmatch/charts/frontend`).
+enabled: true
+replicaCount: 1
+
+global:
+  imageRegistry: 832285994273.dkr.ecr.ap-south-1.amazonaws.com
+
+image:
+  repository: modelmatch-frontend
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+containerPort: 8080   # nginx-unprivileged listens on 8080 as uid 101
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 128Mi
+
+config:
+  # Browser-facing public API host (not the in-cluster Service DNS).
+  # TODO (P15): replace localhost with the public sslip.io ingress host.
+  API_BASE_URL: "http://localhost:8000"

@@ -1,0 +1,17 @@
+ModelMatch umbrella chart rendered (release: {{ .Release.Name }}).
+
+This chart is authored-and-rendered only. It is NOT installed by hand — ArgoCD owns
+deployment from P14. Nothing is "Ready" from a `helm template` / `helm lint`.
+
+Components in this render:
+{{- if .Values.backend.enabled }}
+  - backend  : {{ .Values.global.imageRegistry }}/{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}  (port {{ .Values.backend.containerPort }})
+{{- end }}
+{{- if .Values.frontend.enabled }}
+  - frontend : {{ .Values.global.imageRegistry }}/{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}  (port {{ .Values.frontend.containerPort }})
+{{- end }}
+
+Not in this chart yet:
+  - Postgres + PVC + migration Job/hook .... P13 (needs the DB-password secret, P12)
+  - Secrets (JWT_SECRET, DATABASE_URL, ...) . P12 via ESO -> Secrets Manager
+  - Public ingress host (API_BASE_URL) ...... P15 (sslip.io)

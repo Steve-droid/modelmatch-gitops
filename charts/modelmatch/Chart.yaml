@@ -1,0 +1,27 @@
+# ModelMatch product chart (umbrella).
+#
+# This is the release boundary for the ModelMatch application: frontend + backend
+# are local subcharts under charts/, rendered together as one release. The DB is a
+# SEPARATE concern that lands in P13 (in-cluster Postgres subchart + PVC); it is
+# deliberately NOT scaffolded here so the render stays clean.
+#
+# Authored-and-rendered only (P9): ArgoCD owns all deployment from P14. Do not
+# `helm install` this chart by hand.
+apiVersion: v2
+name: modelmatch
+description: ModelMatch — deterministic model recommender + CI savings dashboard (FE + BE).
+type: application
+# Chart version follows the gitops repo's own SemVer line (per-slice cadence).
+version: 0.1.0
+# appVersion tracks the application release the seeded image tags point at.
+appVersion: "1.0.0"
+
+# Local subcharts (vendored under charts/). Listed here so each can be toggled via
+# its `<name>.enabled` flag; no `repository:` means Helm resolves them from charts/.
+dependencies:
+  - name: backend
+    version: "0.1.0"
+    condition: backend.enabled
+  - name: frontend
+    version: "0.1.0"
+    condition: frontend.enabled
