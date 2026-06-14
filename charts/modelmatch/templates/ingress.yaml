@@ -1,65 +1,83 @@
 {{- if .Values.ingress.enabled }}
 {{- /*
-P15 — the cluster's SINGLE Kubernetes Ingress. Routes both services through P11's one
-F5 NGINX ingress ELB; it never creates a LoadBalancer itself.
+P15 — routing through P11's one F5 NGINX ingress ELB (never creates a LoadBalancer).
+Host-based: app.<ip>.sslip.io -> frontend, api.<ip>.sslip.io -> backend (FastAPI at
+ROOT — no /api prefix, no rewrite). Both hosts derive from global.sslipIp.
 
-Host-based (not path-based): two sslip.io subdomains that resolve to the same ELB IP.
-  app.<ip>.sslip.io -> frontend Service (the SPA at /)
-  api.<ip>.sslip.io -> backend  Service (FastAPI routes live at ROOT — no /api prefix,
-                                          so NO rewrite annotation is needed)
-Both hosts derive from the single source of truth global.sslipIp (recompute per rebuild).
-
-TLS: cert-manager's ingress-shim watches this Ingress (cert-manager.io/cluster-issuer
-annotation), issues a Let's Encrypt cert (HTTP-01 over :80 through this same ELB) covering
-both hosts, and stores it in the tls secret — which the tls block then serves on :443.
+F5 MERGEABLE INGRESS (master/minion). F5 will not merge a second Ingress onto a host
+the app already owns, and cert-manager's HTTP-01 solver IS a second Ingress on the same
+host. So per host we render:
+  - a MASTER (nginx.org/mergeable-ingress-type=master): host + TLS + the cert-manager
+    cluster-issuer annotation, and NO http paths (F5's master rule);
+  - a MINION (mergeable-ingress-type=minion): the actual "/" route.
+cert-manager's solver Ingress joins as ANOTHER minion (annotated via the ClusterIssuer's
+http01 ingressTemplate) so F5 merges its /.well-known/acme-challenge path into the host.
+ssl-redirect is forced off (F5 otherwise 301s HTTP->HTTPS, breaking the HTTP-01 challenge
+on port 80 and the renewals). TLS is per host: each master owns its own single-SAN
+Certificate/Secret (two masters cannot share one secret).
 */}}
 {{- $ip := required "global.sslipIp must be set — run scripts/recompute-host.sh before sync" .Values.global.sslipIp -}}
-{{- $appHost := printf "app.%s.sslip.io" $ip -}}
-{{- $apiHost := printf "api.%s.sslip.io" $ip -}}
+{{- $hosts := list
+      (dict "role" "app" "host" (printf "app.%s.sslip.io" $ip) "svc" .Values.ingress.app.service "port" .Values.ingress.app.port "tls" .Values.ingress.app.tlsSecretName)
+      (dict "role" "api" "host" (printf "api.%s.sslip.io" $ip) "svc" .Values.ingress.api.service "port" .Values.ingress.api.port "tls" .Values.ingress.api.tlsSecretName) -}}
+{{- range $h := $hosts }}
+---
+# {{ $h.role }} host — MASTER: host + TLS + cert-manager; NO http paths (F5 master rule).
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: modelmatch
-  namespace: {{ .Release.Namespace }}
+  name: modelmatch-{{ $h.role }}
+  namespace: {{ $.Release.Namespace }}
   labels:
     app.kubernetes.io/name: modelmatch
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
     app.kubernetes.io/part-of: modelmatch
-    app.kubernetes.io/component: ingress
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/component: ingress-master
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
   annotations:
-    # ingress-shim: issue/renew the cert for the tls hosts via this ClusterIssuer and
-    # store it in tls.secretName. Flip staging -> letsencrypt-prod in values for trust.
-    cert-manager.io/cluster-issuer: {{ .Values.ingress.clusterIssuer | quote }}
+    nginx.org/mergeable-ingress-type: "master"
+    # F5 force-redirects HTTP->HTTPS when TLS is set; must be off for HTTP-01 + renewals.
+    # Canonical F5 key (the controller's SSLRedirectAnnotation const); the legacy
+    # ingress.kubernetes.io/ssl-redirect is only a compat fallback.
+    nginx.org/ssl-redirect: {{ $.Values.ingress.sslRedirect | quote }}
+    # ingress-shim issues/renews the cert for tls.hosts via this ClusterIssuer.
+    cert-manager.io/cluster-issuer: {{ $.Values.ingress.clusterIssuer | quote }}
 spec:
-  # F5-registered IngressClass (kubectl get ingressclass). NOT community ingress-nginx.
-  ingressClassName: {{ .Values.ingress.className | quote }}
+  ingressClassName: {{ $.Values.ingress.className | quote }}
   tls:
     - hosts:
-        - {{ $appHost | quote }}
-        - {{ $apiHost | quote }}
-      secretName: {{ .Values.ingress.tlsSecretName | quote }}
+        - {{ $h.host | quote }}
+      secretName: {{ $h.tls | quote }}
   rules:
-    # FE: the SPA at the root of the app host.
-    - host: {{ $appHost | quote }}
+    # Host only — a master carries no http paths (the minions provide them).
+    - host: {{ $h.host | quote }}
+---
+# {{ $h.role }} host — MINION: the "/" route, merged into the master by F5.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: modelmatch-{{ $h.role }}-routes
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: modelmatch
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/part-of: modelmatch
+    app.kubernetes.io/component: ingress-minion
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+  annotations:
+    nginx.org/mergeable-ingress-type: "minion"
+spec:
+  ingressClassName: {{ $.Values.ingress.className | quote }}
+  rules:
+    - host: {{ $h.host | quote }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ .Values.ingress.frontend.service | quote }}
+                name: {{ $h.svc | quote }}
                 port:
-                  number: {{ .Values.ingress.frontend.port }}
-    # BE: FastAPI at the root of the api host (no prefix, no rewrite).
-    - host: {{ $apiHost | quote }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ .Values.ingress.backend.service | quote }}
-                port:
-                  number: {{ .Values.ingress.backend.port }}
+                  number: {{ $h.port }}
+{{- end }}
 {{- end }}

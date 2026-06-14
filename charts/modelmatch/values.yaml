@@ -26,30 +26,40 @@ global:
   # `helm lint`/`template` pass; it never routes — run the script before syncing).
   sslipIp: "15.207.69.91"
 
-# P15 — the single Kubernetes Ingress (FE + BE behind P11's ONE F5 nginx ELB).
-# Host-based: app.<ip> -> frontend, api.<ip> -> backend (backend stays at root, no
-# rewrite). cert-manager issues the TLS cert via the cluster-issuer annotation.
+# P15 — routing + TLS behind P11's ONE F5 nginx ELB. Host-based: app.<ip> -> frontend,
+# api.<ip> -> backend (backend stays at root, no rewrite). cert-manager issues the certs
+# via the cluster-issuer annotation.
+#
+# F5 MERGEABLE INGRESS (master/minion). F5 won't merge a second Ingress onto a host the
+# app already owns, and cert-manager's HTTP-01 solver IS a second Ingress (community
+# ingress-nginx silently merges; F5 rejects with "All hosts are taken"). So per host we
+# render a MASTER (host + TLS + issuer annotation, NO paths) + a MINION (the route);
+# cert-manager's solver joins as another minion via the issuer ingressTemplate. This is
+# the only F5-native way the ACME challenge can share the host — and it keeps the 60-day
+# renewals working (they re-run HTTP-01 the same way).
 ingress:
   enabled: true
-  # The IngressClass F5 registers (verify: `kubectl get ingressclass`). F5's
-  # nginx.org/* annotations differ from community ingress-nginx — host-based routing
-  # needs none of them (no rewrite), just this class.
+  # The IngressClass F5 registers (verify: `kubectl get ingressclass`).
   className: nginx
-  # Which cert-manager ClusterIssuer (charts/cluster-issuers) signs the cert. Start
-  # on letsencrypt-staging to validate HTTP-01 end-to-end, then flip to
-  # letsencrypt-prod for the trusted cert (and delete the staging tls Secret so the
-  # prod cert re-issues).
+  # Which cert-manager ClusterIssuer (charts/cluster-issuers) signs the certs. Start on
+  # letsencrypt-staging to validate HTTP-01, then flip to letsencrypt-prod for the trusted
+  # cert (delete the staging tls Secrets so the prod certs re-issue).
   clusterIssuer: letsencrypt-staging
-  # cert-manager writes the issued cert here (app ns); the Ingress tls block reads it.
-  tlsSecretName: modelmatch-tls
-  # Service backends. Names = the subchart fullnames (release "modelmatch" + chart
-  # name); the backend SA name is already pinned for IRSA, so these are stable.
-  frontend:
+  # MUST stay false. F5 force-redirects HTTP->HTTPS when an Ingress has TLS, which 301s the
+  # ACME challenge (LE fetches over plain HTTP:80) and would also break renewals. We hand
+  # out https:// URLs, so no auto-redirect is needed.
+  sslRedirect: false
+  # One master+minion pair per host. Service names = subchart fullnames (release
+  # "modelmatch" + chart name); the backend SA name is pinned for IRSA, so these are stable.
+  # Each master gets its OWN single-SAN cert/Secret (two masters can't share one secret).
+  app:
     service: modelmatch-frontend
     port: 80
-  backend:
+    tlsSecretName: modelmatch-app-tls
+  api:
     service: modelmatch-backend
     port: 8000
+    tlsSecretName: modelmatch-api-tls
 
 backend:
   enabled: true
