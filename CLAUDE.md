@@ -1,20 +1,73 @@
 # CLAUDE.md — modelmatch-gitops
 
-**Status: SHELL (inactive).** Placeholder; activates when the GitOps stories begin (after infra +
-images exist).
+**Status: ACTIVE.** The GitOps repo for ModelMatch: the Helm umbrella + (later) ArgoCD app-of-apps that
+deploy the cluster. Activated at **P9 (2026-06-14)** when the Helm umbrella was authored.
 
-> **When work starts here:** flip status to **ACTIVE** and fill in real guidance (Helm umbrella
-> structure, subcharts, ArgoCD Application manifests, environments/values). Until then this is a stub.
+> Polyrepo: this is its **own git repo** — branches/commits/tags happen **here**, not in
+> `modelmatch-infra`. See the umbrella `../CLAUDE.md` (working style, git strategy, stack) and
+> `../docs/planning/01-devops-backlog.md` E12 rows for the slice plan.
 
-## What it will be
+## What this repo is
 
-The **GitOps** repo: a **Helm umbrella chart** with **FE / BE / in-cluster Postgres** subcharts (the DB
-deploys *with* the app, on a **PVC** — per the build module), plus **ArgoCD app-of-apps** managing the
-platform applications (Nginx ingress, cert-manager TLS, monitoring stack, logging stack). Proper sync
-policies + health checks; dedicated namespaces; resource requests/limits; liveness/readiness probes
-wired to `/healthz` + `/readyz`. DB migrations run as their own **Job/Helm hook**, not on backend startup.
+The **GitOps source of truth** for everything that runs *inside* the EKS cluster. Two layers:
 
-The **proactive advisor is a separable subchart** toggled in one place (a `FEATURE_PROACTIVE_ADVISOR`
-values flag, not a code change) — droppable by demo time with no core impact.
+1. **The ModelMatch product chart** — `charts/modelmatch/`, a Helm **umbrella** with **frontend** +
+   **backend** local subcharts (Postgres subchart lands in **P13**). One release boundary for the app.
+2. **ArgoCD app-of-apps** (from **P10**) — a root Application that points at this repo and fans out to
+   platform child-apps (Nginx ingress, cert-manager, ESO, monitoring, logging) + the product chart.
 
-See the umbrella `../CLAUDE.md` and `../docs/planning/architecture.md` §12–§13 + `../docs/instructions/lesson-03`.
+**The deploy boundary:** CI (Jenkins, in `modelmatch-backend`/`-frontend`) builds images, pushes to ECR,
+and **commits an image-tag bump here**; **ArgoCD** is the only thing that ever applies to the cluster.
+Humans author chart structure; the CI Deploy stage edits image tags; ArgoCD syncs. **Never
+`helm install` / `kubectl apply` app resources by hand** — that breaks the GitOps invariant.
+
+## Chart layout
+
+```
+charts/modelmatch/                 # umbrella = the ModelMatch product chart (release boundary)
+├── Chart.yaml                     # dependencies: backend, frontend (local, condition <name>.enabled)
+├── values.yaml                    # global.imageRegistry + backend:/frontend: blocks
+├── templates/NOTES.txt            # render summary (no workload templates at umbrella level)
+└── charts/
+    ├── backend/                   # FastAPI: Deployment+Service+ConfigMap, probes /healthz /readyz
+    └── frontend/                  # nginx:   Deployment+Service+ConfigMap, probe /
+```
+
+- **Subcharts are real charts** (own `Chart.yaml`/`values.yaml`/`_helpers.tpl`), vendored under
+  `charts/`. Helper `define` names are **namespaced** (`backend.*`, `frontend.*`) so they don't collide
+  in one umbrella render.
+- **Values flow:** umbrella `values.yaml` has a `backend:`/`frontend:` block per subchart + a shared
+  `global:` block. Env-specific overrides layer on later as `values-<env>.yaml` **without restructuring**.
+- **Image wiring:** `global.imageRegistry` (the ECR registry) + per-subchart `image.repository`/`image.tag`.
+  The CI Deploy stage (P17/P18) bumps **one `tag` field** per repo.
+
+## Hard rules (don't re-derive)
+
+- **Resource requests/limits on EVERY container — no exceptions.** Backend: **request 256Mi/200m, limit
+  1Gi/1CPU** — the 1Gi cap is the documented **ingestion-OOM gotcha** (the in-cluster Nova ingestion path
+  must stay under it). Frontend (nginx): request 64Mi/50m, limit 128Mi/250m.
+- **Probes:** backend liveness `/healthz` + readiness `/readyz` (FastAPI). Frontend liveness/readiness on
+  `/`. Probe `port:` references the named container port (`http`), not a hardcoded number.
+- **Container ports:** backend **8000** (gunicorn, non-root), frontend **8080** (nginx-unprivileged,
+  uid 101). Services: backend `8000`, frontend `80` → targetPort `http`.
+- **NO secrets in values/ConfigMap — ever.** `JWT_SECRET`, `DATABASE_URL` (DB password), and the LLM-cap
+  secret arrive via **ESO → Secrets Manager (P12)**. ConfigMaps hold non-secret knobs only
+  (`BASELINE_MODEL_ID`, `QUALITY_THRESHOLD`, region/model knobs, `LLM_HOURLY_TOKEN_CAP`, `API_BASE_URL`).
+  `.gitignore` blocks `*-secret.yaml`/`secrets.yaml` as a backstop.
+- **`API_BASE_URL` is browser-facing** — it's the **public ingress host** (P15 sslip.io), *not* the
+  in-cluster backend Service DNS, because the user's browser (not nginx) calls the backend.
+- **In-cluster Postgres uses an EBS-CSI-backed PVC** (no hostPath/container disk) — **P13**.
+- **The proactive advisor is a separable subchart** toggled by a `FEATURE_PROACTIVE_ADVISOR` values flag
+  (not a code change) — droppable by demo time with no core impact.
+- **The CI-agent image is NOT a cluster workload** — it runs in the *user's* Jenkins (BYOK). It is built
+  and published by the backend repo's `Jenkinsfile.agent`; it never becomes an umbrella subchart.
+
+## Git / verification
+
+- **Branch → PR (self-review) → merge `--no-ff` → SemVer tag** (per-slice cadence, `v0.X.0`). The
+  shell-init commit was the one allowed direct-to-`main`; everything since is feature-branch-only.
+- **Verification for chart work = `helm lint charts/modelmatch` + `helm template modelmatch
+  charts/modelmatch`** render clean; **no `helm install`**. Conventional Commits, **no Claude co-author
+  trailer**, **SSH remote**.
+
+> See `../docs/planning/architecture.md` §12–§13 and `../docs/instructions/lesson-03` (Infrastructure/Helm).

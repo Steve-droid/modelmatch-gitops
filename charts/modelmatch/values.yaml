@@ -1,0 +1,72 @@
+# Umbrella values — the single place to configure the ModelMatch product chart.
+#
+# Layout intent (so env overrides layer cleanly later, e.g. values-dev.yaml):
+#   global:    shared knobs handed to every subchart (image registry).
+#   backend:   maps onto the backend subchart's values.
+#   frontend:  maps onto the frontend subchart's values.
+#
+# NO SECRETS HERE. JWT_SECRET, DATABASE_URL (DB password), and the LLM-cap secret
+# arrive via ESO -> Secrets Manager in P12. Image tags are seeded from the ECR
+# :1.0.0 images; the CI Deploy stage (P17/P18) bumps the per-subchart `tag` field.
+
+global:
+  # ECR registry (account 832285994273, ap-south-1). Shared by all subcharts.
+  imageRegistry: 832285994273.dkr.ecr.ap-south-1.amazonaws.com
+
+backend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: modelmatch-backend
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  containerPort: 8000
+  service:
+    type: ClusterIP
+    port: 8000
+  # The ingestion-OOM gotcha: the in-cluster Nova ingestion path must stay under
+  # the 1Gi cap. Request is the steady-state floor; limit is the hard ceiling.
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  # Non-secret config only -> ConfigMap -> envFrom. Pydantic reads these by
+  # uppercase field name. Secrets are intentionally absent (P12, ESO).
+  config:
+    BASELINE_MODEL_ID: "Claude Sonnet 4.5"
+    QUALITY_THRESHOLD: "0.8"
+    AWS_REGION: "ap-south-1"
+    BEDROCK_MODEL_ID: "apac.amazon.nova-lite-v1:0"
+    S3_BUCKET: "modelmatch-ingestion-sources"
+    LLM_CLIENT: "bedrock"            # in-cluster path uses Bedrock via IRSA (P14)
+    LLM_HOURLY_TOKEN_CAP: "200000"
+    # TODO (P15): replace localhost with the public sslip.io ingress host.
+    PUBLIC_BASE_URL: "http://localhost:8000"
+    CORS_ALLOW_ORIGINS: "http://localhost:5173"
+
+frontend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: modelmatch-frontend
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  containerPort: 8080              # nginx-unprivileged listens on 8080 (uid 101)
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 128Mi
+  config:
+    # Browser-facing: the user's browser (not nginx) calls the backend, so this is
+    # the PUBLIC ingress host, not the in-cluster backend Service DNS.
+    # TODO (P15): replace localhost with the public sslip.io ingress host.
+    API_BASE_URL: "http://localhost:8000"
