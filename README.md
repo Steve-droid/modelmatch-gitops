@@ -82,8 +82,9 @@ git push                            # ArgoCD auto-syncs; cert-manager (re)issues
 
 **TLS — staging → prod.** `ingress.clusterIssuer` starts on `letsencrypt-staging` (validates HTTP-01
 without burning prod rate limits; the cert is **untrusted** — browser warning, `curl -k`). Once the
-staging cert goes `Ready`, flip it to `letsencrypt-prod`, **delete the old `app/modelmatch-tls` Secret**
-so cert-manager re-issues against prod, and verify a trusted chain (no `-k`):
+staging certs go `Ready`, flip it to `letsencrypt-prod`, **delete the staging `app/modelmatch-app-tls`
+and `app/modelmatch-api-tls` Secrets** so cert-manager re-issues against prod, and verify a trusted
+chain (no `-k`):
 
 ```bash
 kubectl -n app get ingress,certificate,order,challenge
@@ -93,6 +94,14 @@ curl -k  https://api.<ip>.sslip.io/healthz   # BE
 
 > Both ClusterIssuers (staging + prod) live in [`charts/cluster-issuers`](charts/cluster-issuers) as
 > their own ArgoCD child app. The HTTP-01 challenge is served over **port 80** through the same one ELB.
+
+**Why the Ingress is split (F5 mergeable master/minion).** F5 NGINX, unlike community ingress-nginx,
+won't merge a second Ingress onto a host the app already owns — and cert-manager's HTTP-01 solver *is* a
+second Ingress on that host. So per host the umbrella renders a **master** (host + TLS + cert-manager
+annotation, no paths) + a **minion** (the route), and the ClusterIssuer annotates cert-manager's solver
+as another minion (`nginx.org/mergeable-ingress-type`) so F5 merges the challenge path in. `ssl-redirect`
+is forced **off** because F5 otherwise 301s HTTP→HTTPS, which breaks the plain-HTTP:80 challenge (and the
+60-day renewals). Each host owns its own single-SAN cert (`modelmatch-app-tls` / `modelmatch-api-tls`).
 
 ## Contact
 

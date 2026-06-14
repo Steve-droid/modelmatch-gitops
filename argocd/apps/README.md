@@ -4,7 +4,7 @@ The Terraform-seeded **root App-of-Apps** (see `../README.md`) watches this dire
 everything in it. Drop **one ArgoCD `Application` manifest per app** here and ArgoCD picks it up — no
 `kubectl apply`.
 
-## State: full E12 stack — controllers + secrets + Postgres + app + ingress/TLS (through P15, E12 complete)
+## State: controllers + secrets + Postgres + app + ingress/TLS (through P15 — staging cert; prod-trust pending)
 
 | File | Child app | Chart (pinned) | Namespace | Slice |
 |---|---|---|---|---|
@@ -47,11 +47,14 @@ Job needs the `modelmatch-app-secrets` Secret (avoids a fresh-rebuild race). Its
 - **nginx-ingress** provisions the cluster's **single ingress LB** (controller `Service type=LoadBalancer`).
   It runs **standard-Ingress-only** (`enableCustomResources: false` + `skipCrds: true`) — we use plain
   Kubernetes `Ingress`, not F5's VirtualServer/TransportServer CRDs, so the chart's 12 CRDs are skipped.
-  **P15** added the actual routing: a single host-based `Ingress` (in the `modelmatch` umbrella) sending
-  `app.<ip>.sslip.io` → FE and `api.<ip>.sslip.io` → BE through this same one LB (no second LB).
+  **P15** added the actual routing: host-based `Ingress`es (in the `modelmatch` umbrella) sending
+  `app.<ip>.sslip.io` → FE and `api.<ip>.sslip.io` → BE through this same one LB (no second LB). Each host
+  is an **F5 mergeable master/minion** pair (F5 won't merge a standalone Ingress onto a claimed host the
+  way cert-manager's solver needs) with `ssl-redirect` forced off (F5 else 301s the HTTP-01 challenge).
 - **cert-manager** installed its CRDs at P11; **P15** added the `cluster-issuers` app (LE staging+prod
-  `ClusterIssuer`s, HTTP-01 over the `nginx` class). The umbrella `Ingress`'s `cert-manager.io/cluster-issuer`
-  annotation drives the `Certificate` → the `modelmatch-tls` Secret it serves on :443.
+  `ClusterIssuer`s, HTTP-01 over the `nginx` class; the solver is annotated as a minion so F5 merges it).
+  Each master's `cert-manager.io/cluster-issuer` annotation drives a single-SAN `Certificate` →
+  `modelmatch-app-tls` / `modelmatch-api-tls` Secrets served on :443.
 - **external-secrets** runs with its main controller SA `external-secrets` annotated with IRSA **role B**
   (`modelmatch-eso-irsa`). The `SecretStore`/`ExternalSecret` that pull secrets from AWS Secrets Manager
   are **P12**.
@@ -68,8 +71,9 @@ requests a cert the issuers already exist.
 
 ## What gets added here next
 
-**E12 is complete** — no more child apps until **E13 (observability)**: `kube-prometheus-stack` (P20) and
-the EFK/logging stack (P23) will each land here as their own `Application`. E11 (Jenkins CI/CD) adds no
+**E12 wraps up at the P15 prod-cert flip** (`ingress.clusterIssuer` → `letsencrypt-prod` + trusted-cert
+verification). After that, no more child apps until **E13 (observability)**: `kube-prometheus-stack` (P20)
+and the EFK/logging stack (P23) will each land here as their own `Application`. E11 (Jenkins CI/CD) adds no
 child apps — its Deploy stage only **bumps image tags** in `charts/modelmatch/values.yaml`, which ArgoCD
 then reconciles.
 

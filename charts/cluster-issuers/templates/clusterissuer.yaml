@@ -22,6 +22,14 @@ spec:
       - http01:
           ingress:
             ingressClassName: {{ .Values.ingressClassName }}
+            # F5 won't merge a standalone solver Ingress onto a host the app master
+            # already owns ("All hosts are taken"). Annotate cert-manager's auto-created
+            # solver Ingress as a MINION so F5 merges its /.well-known/acme-challenge
+            # path into the host's master. Required for both issuance and renewals.
+            ingressTemplate:
+              metadata:
+                annotations:
+                  nginx.org/mergeable-ingress-type: "minion"
 {{- end }}
 {{- if .Values.prod.enabled }}
 ---
@@ -42,4 +50,12 @@ spec:
       - http01:
           ingress:
             ingressClassName: {{ .Values.ingressClassName }}
+            # F5 won't merge a standalone solver Ingress onto a host the app master
+            # already owns ("All hosts are taken"). Annotate cert-manager's auto-created
+            # solver Ingress as a MINION so F5 merges its /.well-known/acme-challenge
+            # path into the host's master. Required for both issuance and renewals.
+            ingressTemplate:
+              metadata:
+                annotations:
+                  nginx.org/mergeable-ingress-type: "minion"
 {{- end }}
