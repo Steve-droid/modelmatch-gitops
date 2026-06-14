@@ -4,7 +4,7 @@ The Terraform-seeded **root App-of-Apps** (see `../README.md`) watches this dire
 everything in it. Drop **one ArgoCD `Application` manifest per app** here and ArgoCD picks it up — no
 `kubectl apply`.
 
-## State: controllers + secrets + Postgres + app + ingress/TLS (through P15 — staging cert; prod-trust pending)
+## State: full E12 stack — controllers + secrets + Postgres + app + ingress/TLS (through P15, E12 complete)
 
 | File | Child app | Chart (pinned) | Namespace | Slice |
 |---|---|---|---|---|
@@ -71,11 +71,10 @@ requests a cert the issuers already exist.
 
 ## What gets added here next
 
-**E12 wraps up at the P15 prod-cert flip** (`ingress.clusterIssuer` → `letsencrypt-prod` + trusted-cert
-verification). After that, no more child apps until **E13 (observability)**: `kube-prometheus-stack` (P20)
-and the EFK/logging stack (P23) will each land here as their own `Application`. E11 (Jenkins CI/CD) adds no
-child apps — its Deploy stage only **bumps image tags** in `charts/modelmatch/values.yaml`, which ArgoCD
-then reconciles.
+**E12 is complete** (P15 shipped: ingress + trusted Let's Encrypt cert on `letsencrypt-prod`). No more
+child apps until **E13 (observability)**: `kube-prometheus-stack` (P20) and the EFK/logging stack (P23)
+will each land here as their own `Application`. E11 (Jenkins CI/CD) adds no child apps — its Deploy stage
+only **bumps image tags** in `charts/modelmatch/values.yaml`, which ArgoCD then reconciles.
 
 > _Auto-sync verified 2026-06-14 (P10): a commit to this path is reconciled by ArgoCD with no manual
 > action (no webhook yet — that's P16; ArgoCD polls the repo)._
