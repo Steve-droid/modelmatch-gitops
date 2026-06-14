@@ -1,0 +1,38 @@
+# P14 — the ModelMatch product umbrella (frontend + backend) as an ArgoCD child app.
+#
+# Renders the in-repo charts/modelmatch umbrella: the backend Deployment/Service/
+# ConfigMap + its IRSA ServiceAccount (role A) and the frontend Deployment/Service/
+# ConfigMap. This is the slice where the whole app reaches Ready in-cluster, deployed
+# BY ArgoCD (never `helm install` by hand). Postgres is NOT here — it is its own app
+# (modelmatch-postgres, P13); the umbrella is FE + BE only.
+#
+# sync-wave "2": after the P12 app-secrets (default wave "0") AND the P13
+# modelmatch-postgres app (wave "1"). On a fresh daily rebuild the backend needs the
+# ESO Secret present and the DB serving before it can pass /readyz, so it syncs last.
+# (/readyz only checks DB connectivity; the schema is applied by the postgres app's
+# PostSync migrate Job, which self-heals if the backend briefly leads it.)
+#
+# NO CreateNamespace: `app` is Terraform-owned (P10) — single owner.
+# Points at OUR public repo (anonymous read; same as the other child apps).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: modelmatch
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Steve-droid/modelmatch-gitops.git
+    targetRevision: main
+    path: charts/modelmatch
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: app
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

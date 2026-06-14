@@ -1,0 +1,255 @@
+<mxfile host="65bd71144e">
+    <diagram id="p14appdeployirsa" name="P14">
+        <mxGraphModel dx="1191" dy="409" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1800" pageHeight="1300" background="#000000" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="cluster" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#326CE5;fontColor=#FFFFFF;fontSize=13;fontStyle=1;verticalAlign=top;align=left;spacingLeft=14;spacingTop=8;dashed=0;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="330" width="1148" height="1034" as="geometry"/>
+                </mxCell>
+                <mxCell id="title" value="ModelMatch — Infra + GitOps state at end of P14 (FE+BE umbrella deployed by ArgoCD · backend IRSA role A → Bedrock + S3 · app Ready)" style="text;html=1;fontSize=20;fontStyle=1;align=center;verticalAlign=middle;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="320" y="124" width="1240" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="awscloud" value="AWS Cloud — Account 832285994273 · Region ap-south-1 (Mumbai)" style="sketch=0;outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=13;fontStyle=1;container=0;pointerEvents=0;collapsible=0;recursiveResize=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_aws_cloud_alt;strokeColor=#232F3E;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#FFFFFF;dashed=0;" parent="1" vertex="1">
+                    <mxGeometry x="320" y="162" width="1950" height="1302" as="geometry"/>
+                </mxCell>
+                <mxCell id="vpc" value="VPC — 2 AZs · private worker subnets · single NAT" style="sketch=0;outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=12;fontStyle=1;container=0;pointerEvents=0;collapsible=0;recursiveResize=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_vpc;strokeColor=#8C4FFF;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#FFFFFF;dashed=0;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="250" width="1236" height="1155" as="geometry"/>
+                </mxCell>
+                <mxCell id="eks_icon" value="" style="sketch=0;outlineConnect=0;fontColor=#FFFFFF;gradientColor=none;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.eks;" parent="1" vertex="1">
+                    <mxGeometry x="415" y="338" width="44" height="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="ns_argocd" value="namespace: argocd" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#326CE5;dashed=1;fontColor=#FFFFFF;fontSize=12;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;" parent="1" vertex="1">
+                    <mxGeometry x="430" y="410" width="472" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="argocd_img" value="Argo CD" style="shape=image;verticalLabelPosition=bottom;labelPosition=center;verticalAlign=top;aspect=fixed;imageAspect=0;image=data:image/svg+xml,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBmaWxsPSJub25lIiB2aWV3Qm94PSIwIDAgNTgxIDc0NyI+CiAgPHBhdGggaWQ9ImEiIGZpbGw9IiNmZmYiIGQ9Ik0zMzYuNzYgNDM3LjYxYzAgMjguMzEtMTguODMgNDMuMzYtNDkuMjkgNDMuMzYtMzAuNDUgMC00Ny4yLTE3Ljg0LTQ3LjItNDMuMzYgMCAwIDE2Ljc1IDIzLjY1IDQ3LjIgMjMuNjUgMzAuNDYgMCA0OS4zLTIzLjY1IDQ5LjMtMjMuNjVaIi8+CiAgPHBhdGggZmlsbD0iI0UyRjVGQyIgZD0iTTI5MC41IDU0Ny45OGMxNDguNDcgMCAyNjguODQtMTIwLjQ1IDI2OC44NC0yNjkuMDQgMC0xNDguNTgtMTIwLjM3LTI2OS4wMy0yNjguODQtMjY5LjAzLTE0OC40NyAwLTI2OC44NCAxMjAuNDUtMjY4Ljg0IDI2OS4wMyAwIDE0OC41OSAxMjAuMzcgMjY5LjA0IDI2OC44NCAyNjkuMDRaIi8+CiAgPHBhdGggZmlsbD0iI0NERUNGNiIgZD0iTTI5MC41IDUwNC4wNGMxMjEuMzYgMCAyMTkuNzQtOTguNDUgMjE5Ljc0LTIxOS45UzQxMS44NiA2NC4yNCAyOTAuNSA2NC4yNGMtMTIxLjM2IDAtMjE5Ljc0IDk4LjQ1LTIxOS43NCAyMTkuOXM5OC4zOCAyMTkuOSAyMTkuNzQgMjE5LjlaIi8+CiAgPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTIwOC4zMSA5MS41MWExMi45OCAxMi45OCAwIDEgMCAwLTI1Ljk2IDEyLjk4IDEyLjk4IDAgMCAwIDAgMjUuOTZabS05Ni41NyAzMjUuODJhNC41IDQuNSAwIDEgMCA3LjA4LTUuNTRjLTg3LjgtMTEyLjIxLTM3LjE1LTI1Ny42NSA2Mi41LTMxNC43NGE0LjUgNC41IDAgMCAwLTQuNDctNy44QzczLjIzIDE0OC42IDIwLjAzIDMwMC4xMiAxMTEuNzQgNDE3LjMzWiIvPgogIDxwYXRoIGZpbGw9IiNCNUQyRjMiIGQ9Ik0xOS4yNiAyMjUuNTRhMy41IDMuNSAwIDEgMC03IDBoN1ptLTcgMTA1LjM4YTMuNSAzLjUgMCAxIDAgNyAwaC03Wm01NTUuMDctMTA1Ljg4YTMuNSAzLjUgMCAxIDAtNyAwaDdabS03IDEwNS4zOGEzLjUgMy41IDAgMSAwIDcgMGgtN1pNMjg5Ljc5IDU1NS45N2MxNTMuMjggMCAyNzcuNTQtMTI0LjM1IDI3Ny41NC0yNzcuNzNoLTdjMCAxNDkuNTItMTIxLjEzIDI3MC43My0yNzAuNTQgMjcwLjczdjdabTI3Ny41NC0yNzcuNzNDNTY3LjMzIDEyNC44NCA0NDMuMDcuNSAyODkuNzkuNXY3YzE0OS40MSAwIDI3MC41NCAxMjEuMjEgMjcwLjU0IDI3MC43NGg3Wk0yODkuNzkuNUMxMzYuNTEuNSAxMi4yNiAxMjQuODUgMTIuMjYgMjc4LjI0aDdDMTkuMjYgMTI4LjcgMTQwLjM4IDcuNSAyODkuNzkgNy41di03Wk0xMi4yNiAyNzguMjRjMCAxNTMuMzggMTI0LjI1IDI3Ny43MyAyNzcuNTMgMjc3Ljczdi03Yy0xNDkuNCAwLTI3MC41My0xMjEuMi0yNzAuNTMtMjcwLjczaC03Wm0wLTUyLjd2MTA1LjM4aDdWMjI1LjU0aC03Wm01NDguMDctLjV2MTA1LjM4aDdWMjI1LjA0aC03WiIvPgogIDxwYXRoIGZpbGw9IiNCNUQyRjMiIGQ9Ik0yMS42NiAyMjUuNzNhMTAuODQgMTAuODQgMCAxIDAtMjEuNjYgMHYxMDYuNDNhMTAuODQgMTAuODQgMCAxIDAgMjEuNjYgMFYyMjUuNzNabTU1OS4zNCAwYTEwLjg0IDEwLjg0IDAgMSAwLTIxLjY2IDB2MTA2LjQzYTEwLjg0IDEwLjg0IDAgMSAwIDIxLjY2IDBWMjI1LjczWiIvPgogIDxwYXRoIGZpbGw9IiNGRTczM0UiIGQ9Ik0xNzEuMTcgNjg3Ljc2YzEyLjUzLTUuMSA5Ljk4LTEwLjIgOS45OC0xMi43NGwtNi4xLTkyLjU1LTUuMzctNDYuMy04LjEyLTI4OS4wN2MwLTY4LjYgNTAuNzMtMTMyLjcyIDEyNy4zLTEzMi43MnMxMzAuNzYgNjEuNzEgMTMwLjg4IDEzMi43N2MtMi4yIDEzNy4yNC01LjkgMTg5LjQ3LTExLjA3IDI4OC4wMi0uNjMgMTMuNDctMi4zOCAzMy44Ni0yLjk2IDQ2LjMyLTIuODggNjEuNjYtNi4xNCA5MS44Ny02LjE0IDkzLjUzIDAgMi41NS0yLjU0IDcuNjQgOS45OCAxMi43NCAxMi41MiA1LjEgNDEuNDYgMTEuNzEgNDEuNDYgMTMuMzMgMCAxLjYtNDguODkgMC00OC44OSAwLTI4LjAyIDAtMjguMDItMjAuOTgtMjguMDItMjYuMDcgMC01LjEtNy42NC05Mi42LTcuNjQtOTIuNmwtMi41NSAxMTIuOTljMCA1LjEgMi41NSAxMi43NCAyMC4zOCAxNy44NCAwIDAgMzguOTEgNS44OSAzOC45MSA4LjAxIDAgMi4xMy00Ni41NSAwLTQ2LjU1IDAtMzUuNDUgMC0zNS40NS0yMC43NS0zNS40NS0yMC43NWwtNy42NC05Mi42UzMzMSA3MDAuNSAzMzEgNzEzLjI0YzAgOS45OSAxLjczIDE3LjYzIDI5LjU0IDIyLjczIDEzLjQzIDMuNzMgNDAuNTQgOC4zNSA0MC41NCAxMC4yIDAgMS44NS02MS44NiAwLTYxLjg2IDAtMzMuMTEtMi41NS0zNi4yNC0yNS41LTM2LjI0LTI1LjVsLTEyLjU1LTQ2LjE0LTEyLjUgNDYuMTVzLTUuMDkgMjIuOTQtMzguMiAyNS40OWMwIDAtNTYuMTcgMS44NS01Ni4xNyAwczIyLjUtNS45OSAzNi44MS0xMC4yYzE5LjM2LTUuNjkgMjkuNTUtMTIuNzQgMjkuNTUtMjIuNzMgMC0xMi43NC0yLjU1LTEwNS4zNS0yLjU1LTEwNS4zNWwtNy42NCA5Mi42czAgMjIuNzQtMzUuNDUgMjIuNzRjMCAwLTUwLjUuMTUtNTAuNS0xLjk4IDAtMi4xMiA0Mi42NC04IDQyLjY0LTggMTcuODMtNS4xIDIwLjM4LTEyLjc1IDIwLjM4LTE3Ljg1bC0yLjU1LTExM3MtNy42NCA4Ny41LTcuNjQgOTIuNmMwIDUuMSAwIDI4LjA1LTI4LjAyIDI4LjA1IDAgMC00Ny4xMy0yLjMzLTQ3LjEzLTMuOTUgMC0xLjYgMjcuMTgtNi4yNSAzOS43LTExLjM1WiIvPgogIDxwYXRoIGZpbGw9IiNGRTY0NDYiIGQ9Ik0xNjkuNjggNTM2LjE2cy01LjIzIDEyLjgtMTcuMDUgMTkuN2MtMTEuODEgNi45LTI1LjUxIDkuMTQtMzguNCAxMC44NCAwIDAgMTcuNzIgOC44NyAzOS4zOSA2LjkgMTMuNTgtMS4xIDE5LjI4IDIuMzYgMjEuNDIgOC44N2wtNS4zNi00Ni4zWm0yMzguOTktLjk5czcuNjMgMTIuOCAxOS40NSAxOS43YzExLjgyIDYuOSAyNS41MSA5LjE1IDM4LjQgMTAuODUgMCAwLTE3LjcyIDguODctMzkuMzggNi45LTEzLjU4LTEuMS0xOS4yOSAyLjM1LTIxLjQzIDguODdsMi45Ni00Ni4zMloiLz4KICA8cGF0aCBmaWxsPSIjRkU2NDQ2IiBkPSJtNDA4LjgxIDUzMyAuOTktMTYuMDJjLTYyLjU2IDI5LjU0LTEyMC43IDI2LjQzLTEyMC43IDI2LjQzcy01OC40OSAyLjQ1LTExOS45Mi0yNi41N2wuNCAxNS41N3M0My44MiAyNi45NCAxMTkuNTIgMjYuOTRjNzUuNyAwIDExOS43MS0yNi4zNSAxMTkuNzEtMjYuMzVaIiBvcGFjaXR5PSIuMyIvPgogIDxwYXRoIGZpbGw9IiNGRUE3NzciIGQ9Ik0yMzguNzggMTk0LjI1YTE3Ljg0IDE3Ljg0IDAgMSAwLS4wMS0zNS42NyAxNy44NCAxNy44NCAwIDAgMCAuMDEgMzUuNjdaIiBvcGFjaXR5PSIuNSIvPgogIDxwYXRoIGZpbGw9IiNGRTZCM0MiIGQ9Ik00MTkuNSAyNDkuMDZzMS44OC0yMi4zNC03Ljg4LTQ4Ljk0Yy0yNi43Ny03My4wMS05Mi41Ni04Ny43MS0xMjguMDItODUuNjQgMCAwIDUwLjI4IDIzLjc2IDUyLjYxIDk5LjggMS4wNiAzMy43MiAxLjA2IDM0Ljc4IDEuMDYgMzQuNzhoODIuMjNaIi8+CiAgPHVzZSB4bGluazpocmVmPSIjYSIvPgogIDx1c2UgeGxpbms6aHJlZj0iI2EiLz4KICA8cGF0aCBmaWxsPSIjZmZmIiBkPSJNMzM2Ljc2IDQzNy42MWMwIDI4LjMxLTExLjM5IDcyLjkyLTQ5LjI5IDcyLjkycy00Ny4yLTQ3LjQtNDcuMi03Mi45MmMwIDAgMCA0My4zNiA0Ny4yIDQzLjM2IDUxLjYyIDAgNDkuMy00My4zNiA0OS4zLTQzLjM2WiIvPgogIDxwYXRoIGZpbGw9IiMwNzA5MDkiIGQ9Ik0zMzYuNzYgNDM3LjYxYzAgMjguMzEtMTEuMzkgNzIuOTItNDkuMjkgNzIuOTJzLTQ3LjItNDcuNC00Ny4yLTcyLjkyYzAgMCAwIDQzLjM2IDQ3LjIgNDMuMzYgNTEuNjIgMCA0OS4zLTQzLjM2IDQ5LjMtNDMuMzZaIi8+CiAgPHBhdGggZmlsbD0iI0ZFNjQ0NiIgZD0iTTE5Ny45MyAzOTQuMjVhNzcuODIgNzcuODIgMCAwIDAgNzcuOC03Ny44NWMwLTQzLTM0LjgzLTc3Ljg1LTc3LjgtNzcuODVhNzcuODIgNzcuODIgMCAwIDAtNzcuOCA3Ny44NWMwIDQzIDM0Ljg0IDc3Ljg1IDc3LjggNzcuODVaIi8+CiAgPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTE5Ny43MyAzNzguMzJhNjAuOTQgNjAuOTQgMCAwIDAgNjAuOTItNjAuOTYgNjAuOTQgNjAuOTQgMCAwIDAtNjAuOTItNjAuOTcgNjAuOTQgNjAuOTQgMCAwIDAtNjAuOTIgNjAuOTcgNjAuOTQgNjAuOTQgMCAwIDAgNjAuOTIgNjAuOTZaIi8+CiAgPHBhdGggZmlsbD0iIzA5MEIwQiIgZD0iTTE5NS45NiAzMjUuMjdhMTguNzIgMTguNzIgMCAxIDAtLjAxLTM3LjQ0IDE4LjcyIDE4LjcyIDAgMCAwIC4wMSAzNy40NFoiLz4KICA8cGF0aCBmaWxsPSIjRkU2NDQ2IiBkPSJNMzgxLjEgMzk0LjI1YTc3LjgyIDc3LjgyIDAgMCAwIDc3Ljc5LTc3Ljg1YzAtNDMtMzQuODMtNzcuODUtNzcuOC03Ny44NWE3Ny44MiA3Ny44MiAwIDAgMC03Ny43OSA3Ny44NWMwIDQzIDM0LjgzIDc3Ljg1IDc3LjggNzcuODVaIi8+CiAgPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTM3OCAzNzguMjFhNjAuOTQgNjAuOTQgMCAwIDAgNjAuOTMtNjAuOTZBNjAuOTQgNjAuOTQgMCAwIDAgMzc4IDI1Ni4yOWE2MC45NCA2MC45NCAwIDAgMC02MC45MiA2MC45NkE2MC45NCA2MC45NCAwIDAgMCAzNzggMzc4LjIxWiIvPgogIDxwYXRoIGZpbGw9IiMwOTBCMEIiIGQ9Ik0zNzkuMTMgMzI1LjI3YTE4LjcyIDE4LjcyIDAgMSAwLS4wMi0zNy40NCAxOC43MiAxOC43MiAwIDAgMCAuMDEgMzcuNDRaIi8+Cjwvc3ZnPg==;fontColor=#FFFFFF;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="474" y="440" width="74" height="94" as="geometry"/>
+                </mxCell>
+                <mxCell id="argocd_note" value="&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;&lt;b style=&quot;&quot;&gt;root App-of-Apps&lt;/b&gt; — Synced / Healthy · 7 child apps&lt;br&gt;nginx-ingress · cert-manager · external-secrets · app-secrets&lt;br&gt;&lt;b&gt;cnpg-operator&lt;/b&gt; (wave -1) · &lt;b&gt;modelmatch-postgres&lt;/b&gt; (wave 1)&lt;br&gt;&lt;b&gt;modelmatch&lt;/b&gt; FE+BE umbrella (wave 2) — P14 · all Synced / Healthy&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#FFFFFF;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="590" y="445" width="310" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="ns_app" value="&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;namespace: app&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#879196;dashed=1;fontColor=#FFFFFF;fontSize=12;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" parent="1" vertex="1">
+                    <mxGeometry x="430" y="600" width="1075" height="345" as="geometry"/>
+                </mxCell>
+                <mxCell id="ns_monitoring" value="&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;namespace: monitoring&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#879196;dashed=1;fontColor=#FFFFFF;fontSize=12;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;" parent="1" vertex="1">
+                    <mxGeometry x="915" y="410" width="285" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="ns_monitoring_note" value="&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;Terraform-created · empty&lt;br&gt;awaiting Prometheus / Grafana (P20)&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=middle;fontColor=#FFFFFF;fontSize=10;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="930" y="455" width="255" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="ns_logging" value="&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;namespace: logging&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#879196;dashed=1;fontColor=#FFFFFF;fontSize=12;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;" parent="1" vertex="1">
+                    <mxGeometry x="1215" y="410" width="290" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="ns_logging_note" value="&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;Terraform-created · empty&lt;br&gt;awaiting EFK (P23)&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=middle;fontColor=#FFFFFF;fontSize=10;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="1230" y="455" width="260" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="ecr" value="ECR — FE :1.0.0 · BE :1.0.1&#xa;(deployed by ArgoCD)" style="sketch=0;outlineConnect=0;fontColor=#FFFFFF;gradientColor=none;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ecr;" parent="1" vertex="1">
+                    <mxGeometry x="1766" y="546" width="78" height="78" as="geometry"/>
+                </mxCell>
+                <mxCell id="s3state" value="S3 — Terraform state" style="sketch=0;outlineConnect=0;fontColor=#FFFFFF;gradientColor=none;fillColor=#7AA116;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;" parent="1" vertex="1">
+                    <mxGeometry x="1766" y="692" width="78" height="78" as="geometry"/>
+                </mxCell>
+                <mxCell id="infra_note" value="+ E10 foundation (already built): VPC · IGW · single NAT · IRSA roles A/B · EBS CSI addon (+ IRSA) · S3 ingestion bucket · AWS Budget" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontColor=#FFFFFF;fontSize=10;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="310" y="1529" width="505" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_sync" value="root app syncs argocd/apps/ → 7 child apps" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;strokeColor=#82B366;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="1" source="i0E8GhgrucKtcn0O7pZS-1" target="argocd_img" edge="1">
+                    <mxGeometry x="0.0035" y="7" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                        <mxPoint x="148" y="509.0588235294117" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="i0E8GhgrucKtcn0O7pZS-6" value="" style="group" parent="1" connectable="0" vertex="1">
+                    <mxGeometry x="-170" y="450" width="75" height="108.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="i0E8GhgrucKtcn0O7pZS-1" value="" style="dashed=0;outlineConnect=0;html=1;align=center;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;shape=mxgraph.weblogos.github" parent="i0E8GhgrucKtcn0O7pZS-6" vertex="1">
+                    <mxGeometry width="75" height="75" as="geometry"/>
+                </mxCell>
+                <mxCell id="i0E8GhgrucKtcn0O7pZS-4" value="&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;&lt;span style=&quot;font-weight: 700; white-space: nowrap;&quot;&gt;modelmatch-gitops repo&lt;/span&gt;&lt;br style=&quot;font-weight: 700; white-space: nowrap;&quot;&gt;&lt;span style=&quot;white-space: nowrap; font-size: 10px;&quot;&gt;Helm umbrella + 7 child apps&lt;br&gt;in argocd/apps/ (→ P14)&lt;/span&gt;&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" parent="i0E8GhgrucKtcn0O7pZS-6" vertex="1">
+                    <mxGeometry x="7.5" y="86.5" width="60" height="30" as="geometry"/>
+                </mxCell>
+                <UserObject label="&lt;span style=&quot;color: rgb(255, 255, 255); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 700; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(27, 29, 30); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;EKS cluster — managed node group: 2× t3a.medium (private subnets)&lt;/span&gt;" link="&lt;span style=&quot;color: rgb(255, 255, 255); font-family: Helvetica; font-size: 13px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 700; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(27, 29, 30); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;&quot;&gt;EKS cluster — managed node group: 2× t3a.medium (private subnets)&lt;/span&gt;" id="i0E8GhgrucKtcn0O7pZS-7">
+                    <mxCell style="text;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                        <mxGeometry x="466.00176470588247" y="346.0011764705883" width="460" height="38" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+                <mxCell id="tf_img" value="Terraform — platform/ stack" style="shape=image;verticalLabelPosition=bottom;labelPosition=center;verticalAlign=top;aspect=fixed;imageAspect=0;image=data:image/svg+xml,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCI+PHN0eWxlPjwhW0NEQVRBWy5De2ZpbGwtcnVsZTpldmVub2RkfV1dPjwvc3R5bGU+PGcgdHJhbnNmb3JtPSJtYXRyaXgoLjgyNjc2NyAwIDAgLjgyNjc2NyA4LjQxNjMyMiA1MS4xMzgxNjQpIiBjbGFzcz0iQyI+PHBhdGggZD0iTTM5LjEgMTUuNTU3di0yNC40M2wtMjEuMTYtMTIuMjJ2MjQuNDN6bTAtMjcuMWwtMjEuMTYtMTIuMjJ2LTI0LjQ0bDIxLjE2IDEyLjIyeiIgZmlsbD0iIzVjNGVlNSIvPjxwYXRoIGQ9Ik02Mi42LTIzLjc3M3YtMjQuNDRsLTIxLjE3IDEyLjIydjI0LjQ0eiIgZmlsbD0iIzQwNDBiMiIvPjxnIGZpbGw9IiM1YzRlZTUiPjxwYXRoIGQ9Ik0xNS42Mi0yNS4xOTN2LTI0LjQ0bC0yMS4xNi0xMi4yMnYyNC40NHoiLz48cGF0aCBkPSJNNTMuNjQtLjQ4MyIvPjxwYXRoIGQ9Ik0xNy45NC0yMS4wOTMiLz48L2c+PC9nPjwvc3ZnPg==;fontColor=#FFFFFF;fontSize=11;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="-161.5" y="706" width="58" height="58" as="geometry"/>
+                </mxCell>
+                <mxCell id="tf_edge" value="creates the 4 namespaces (managed-by: terraform)&#xa;+ installs ArgoCD &amp; seeds root app (helm_release)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;strokeColor=#7B42BC;fontColor=#FFFFFF;labelBackgroundColor=none;entryX=0.004;entryY=0.395;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="tf_img" target="ns_app" edge="1">
+                    <mxGeometry x="-0.0007" y="13" relative="1" as="geometry">
+                        <mxPoint x="-2" as="offset"/>
+                        <mxPoint x="400" y="692" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ctrl_header" value="Platform controllers (P11) — ArgoCD child apps · namespaces created by ArgoCD (CreateNamespace=true) · each Synced / Healthy" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#FFFFFF;fontSize=11;fontStyle=3;" parent="1" vertex="1">
+                    <mxGeometry x="485.5" y="1335" width="699.5" height="22" as="geometry"/>
+                </mxCell>
+                <mxCell id="ns_ingressnginx" value="namespace:&amp;nbsp;&lt;code&gt;nginx-ingress&lt;/code&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#82B366;dashed=1;fontColor=#FFFFFF;fontSize=12;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;" parent="1" vertex="1">
+                    <mxGeometry x="441" y="1115" width="290" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="ns_certmanager" value="namespace: cert-manager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#82B366;dashed=1;fontColor=#FFFFFF;fontSize=12;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;" parent="1" vertex="1">
+                    <mxGeometry x="808" y="1115" width="290" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="ns_externalsecrets" value="&lt;font&gt;namespace: external-secrets&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#82B366;dashed=1;fontColor=#FFFFFF;fontSize=12;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;" parent="1" vertex="1">
+                    <mxGeometry x="1176" y="1118" width="290" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="ic_nginx" value="Nginx ingress controller" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=deploy;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="563" y="1158" width="46" height="46" as="geometry"/>
+                </mxCell>
+                <mxCell id="ic_cert" value="cert-manager controller" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=deploy;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="930" y="1158" width="46" height="46" as="geometry"/>
+                </mxCell>
+                <mxCell id="ic_eso" value="ESO controller" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=deploy;fontSize=11;points=[[0.24,0.15,0,0,0],[0.74,0.15,0,0,0]];" parent="1" vertex="1">
+                    <mxGeometry x="1298" y="1166" width="46" height="46" as="geometry"/>
+                </mxCell>
+                <mxCell id="note_nginx" value="exposes Service type=LoadBalancer&#xa;→ AWS LB (routing + TLS in P15)" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=middle;fontColor=#FFFFFF;fontSize=10;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="451" y="1248" width="270" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="note_cert" value="issues TLS certs&#xa;ClusterIssuer + LE wired in P15" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=middle;fontColor=#FFFFFF;fontSize=10;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="818" y="1248" width="270" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="note_eso" value="controller SA → IRSA role B&#xa;drives the app-ns SecretStore + ExternalSecret (P12)" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=middle;fontColor=#FFFFFF;fontSize=10;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="1186" y="1251" width="270" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="secretsmgr" value="Secrets Manager&#xa;modelmatch/app" style="sketch=0;outlineConnect=0;fontColor=#FFFFFF;gradientColor=none;fillColor=#DD344C;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.secrets_manager;" parent="1" vertex="1">
+                    <mxGeometry x="2076.33" y="1150" width="78" height="78" as="geometry"/>
+                </mxCell>
+                <mxCell id="roleb" value="IRSA role B&#xa;modelmatch-eso-irsa" style="sketch=0;outlineConnect=0;fontColor=#FFFFFF;gradientColor=none;fillColor=#DD344C;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.role;" parent="1" vertex="1">
+                    <mxGeometry x="1773.33" y="1150" width="78" height="78" as="geometry"/>
+                </mxCell>
+                <mxCell id="ic_secretstore" value="SecretStore" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=top;verticalAlign=bottom;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=crd;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="468" y="667" width="45" height="43" as="geometry"/>
+                </mxCell>
+                <mxCell id="ic_externalsecret" value="&lt;font style=&quot;font-size: 6px;&quot;&gt;ExternalSecret (watched by ESO controller)&lt;/font&gt;" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=top;verticalAlign=bottom;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=crd;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="580" y="667" width="46" height="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="ic_appsecret" value="k8s Secret" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=top;verticalAlign=bottom;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=secret;fontSize=10;points=[[0.03,0.58,0,0,0],[1,0.58,0,0,0]];" parent="1" vertex="1">
+                    <mxGeometry x="775" y="670.5" width="49" height="47" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_eso_roleb" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;strokeColor=#DD344C;fontColor=#FFFFFF;labelBackgroundColor=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ic_eso" target="roleb" edge="1">
+                    <mxGeometry x="0.3697" y="-1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="RUsPL5r0Td1HIzmjLBuT-2" value="&lt;span style=&quot;font-size: 10px; background-color: light-dark(rgb(255, 255, 255), rgb(0, 0, 0));&quot;&gt;&lt;font style=&quot;color: rgb(255, 153, 153);&quot;&gt;assumes (OIDC / IRSA)&lt;/font&gt;&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="e_eso_roleb" connectable="0" vertex="1">
+                    <mxGeometry x="0.3756" relative="1" as="geometry">
+                        <mxPoint x="71" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_roleb_sm" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;strokeColor=#DD344C;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="1" source="roleb" target="secretsmgr" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="2022.33" y="958" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="RUsPL5r0Td1HIzmjLBuT-4" value="&lt;span style=&quot;font-size: 10px; background-color: rgb(27, 29, 30);&quot;&gt;&lt;font style=&quot;color: rgb(255, 153, 153);&quot;&gt;secretsmanager:GetSecretValue&lt;/font&gt;&lt;/span&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="e_roleb_sm" connectable="0" vertex="1">
+                    <mxGeometry x="-0.0087" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_eso_secret" value="writes synced Secret" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;strokeColor=#5B8DEF;fontColor=#FFFFFF;labelBackgroundColor=none;exitX=0.639;exitY=0.058;exitDx=0;exitDy=0;entryX=1;entryY=0.58;entryDx=0;entryDy=0;exitPerimeter=0;entryPerimeter=0;" parent="1" source="ic_eso" target="ic_appsecret" edge="1">
+                    <mxGeometry x="-0.0525" y="1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="1327" y="1094"/>
+                            <mxPoint x="1327" y="992"/>
+                            <mxPoint x="845" y="992"/>
+                            <mxPoint x="845" y="699"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ic_migratejob" value="migrate Job" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=job;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="478" y="860" width="44" height="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="ic_postgres" value="&lt;font style=&quot;font-size: 4px;&quot;&gt;Postgres Cluster (CNPG)&lt;br&gt;1 primary + 1 replica&lt;/font&gt;" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=top;verticalAlign=bottom;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=crd;fontSize=10;points=[[0,0.5,0,0,0],[0.73,0.11,0,0,0]];" parent="1" vertex="1">
+                    <mxGeometry x="632" y="860" width="44" height="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="ic_pvc" value="PVC ×2 (5Gi)" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=pvc;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="775" y="860" width="44" height="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="ebs_vol" value="EBS volume ×2 (gp3)" style="sketch=0;outlineConnect=0;fontColor=#FFFFFF;gradientColor=none;fillColor=#7AA116;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.elastic_block_store;" parent="1" vertex="1">
+                    <mxGeometry x="1766" y="873" width="78" height="78" as="geometry"/>
+                </mxCell>
+                <mxCell id="ebs_note" value="backed by AWS EBS CSI driver&#xa;(kube-system addon · IRSA, P4)" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=top;fontColor=#FFFFFF;fontSize=10;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="1722" y="972" width="190" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_migrate_pg" value="&lt;font style=&quot;font-size: 6px;&quot;&gt;alembic upgrade head&lt;br&gt;(PostSync hook · waits for -rw)&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;strokeColor=#5B8DEF;fontColor=#FFFFFF;labelBackgroundColor=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ic_migratejob" target="ic_postgres" edge="1">
+                    <mxGeometry x="-0.0909" y="17" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_pg_pvc" value="&lt;font style=&quot;font-size: 6px;&quot;&gt;per-instance PVC&lt;br&gt;(5Gi · no container-disk state)&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;strokeColor=#5B8DEF;fontColor=#FFFFFF;labelBackgroundColor=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ic_postgres" target="ic_pvc" edge="1">
+                    <mxGeometry x="-0.0105" y="14" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_pg_secret" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;strokeColor=#5B8DEF;fontColor=#FFFFFF;labelBackgroundColor=none;exitX=0.496;exitY=0.044;exitDx=0;exitDy=0;exitPerimeter=0;entryX=-0.005;entryY=0.603;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="ic_migratejob" target="ic_appsecret" edge="1">
+                    <mxGeometry x="-0.1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="495" y="862"/>
+                            <mxPoint x="495" y="745"/>
+                            <mxPoint x="757" y="745"/>
+                            <mxPoint x="757" y="699"/>
+                        </Array>
+                        <mxPoint x="494.9999999999998" y="838" as="sourcePoint"/>
+                        <mxPoint x="801" y="724" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="lgKct7Qfo0XiJRMAnFKi-3" value="&lt;font style=&quot;color: rgb(255, 255, 255); font-size: 5px; line-height: 80%;&quot;&gt;PGPASSWORD · CHAT_RO · JWT&lt;br&gt;(P12 Secret)&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" parent="e_pg_secret" connectable="0" vertex="1">
+                    <mxGeometry x="-0.2" relative="1" as="geometry">
+                        <mxPoint x="2" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_pvc_ebs" value="claims (gp3 SC)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;strokeColor=#7AA116;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="1" edge="1">
+                    <mxGeometry x="0.3004" y="6" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="895" y="888"/>
+                        </Array>
+                        <mxPoint x="820" y="888" as="sourcePoint"/>
+                        <mxPoint x="1102" y="889" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ic_dbsecret" value="&lt;font style=&quot;font-size: 6px;&quot;&gt;DB owner cred&lt;br&gt;(basic-auth · ESO)&lt;/font&gt;" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=secret;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="777.5" y="734" width="44" height="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="ic_sc" value="&lt;font style=&quot;font-size: 7px;&quot;&gt;StorageClass&lt;br&gt;modelmatch-gp3 (CSI · Delete)&lt;/font&gt;" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=sc;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="1102" y="862" width="44" height="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="ns_cnpgsystem" value="&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;namespace: cnpg-system&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#82B366;dashed=1;fontColor=#FFFFFF;fontSize=12;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;" parent="1" vertex="1">
+                    <mxGeometry x="443" y="1000" width="372" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="ic_cnpg_operator" value="CNPG operator" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=deploy;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="634" y="1008" width="44" height="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="note_cnpg" value="&lt;font style=&quot;color: rgb(255, 255, 255); font-size: 6px;&quot;&gt;installs postgresql.cnpg.io CRDs&lt;br&gt;(sync-wave -1) · own ArgoCD child app&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#FFFFFF;fontSize=10;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="699" y="1017" width="108" height="38" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_sc_ebs" value="provisions&#xa;(EBS CSI · Delete)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;strokeColor=#7AA116;fontColor=#FFFFFF;labelBackgroundColor=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ic_sc" target="ebs_vol" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_cluster_dbsecret" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;strokeColor=#5B8DEF;fontColor=#FFFFFF;labelBackgroundColor=none;entryX=0.034;entryY=0.632;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.73;exitY=0.11;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="ic_postgres" target="ic_dbsecret" edge="1">
+                    <mxGeometry x="0.2" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="651" y="865"/>
+                            <mxPoint x="651" y="762"/>
+                        </Array>
+                        <mxPoint x="641" y="869" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_operator_cluster" value="&lt;font style=&quot;font-size: 6px;&quot;&gt;reconciles → pods · PVCs ·&lt;br&gt;-rw / -ro / -r Services&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;endArrow=block;strokeColor=#5B8DEF;fontColor=#FFFFFF;labelBackgroundColor=none;exitX=0.501;exitY=0.016;exitDx=0;exitDy=0;entryX=0.542;entryY=0.971;entryDx=0;entryDy=0;entryPerimeter=0;exitPerimeter=0;" parent="1" source="ic_cnpg_operator" target="ic_postgres" edge="1">
+                    <mxGeometry x="-0.4029" y="-38" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="656" y="995"/>
+                            <mxPoint x="656" y="995"/>
+                        </Array>
+                        <mxPoint x="656" y="1033" as="sourcePoint"/>
+                        <mxPoint x="658" y="917" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

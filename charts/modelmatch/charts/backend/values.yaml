@@ -11,10 +11,24 @@ global:
 
 image:
   repository: modelmatch-backend
-  tag: "1.0.0"
+  # 1.0.1 carries boto3 (built with --extra bedrock) for the in-cluster Bedrock surface.
+  tag: "1.0.1"
   pullPolicy: IfNotPresent
 
 containerPort: 8000
+
+# IRSA (P14). The SA name is PINNED (role A's trust is bound to
+# system:serviceaccount:app:modelmatch-backend) — do not change it. The role-arn
+# annotation is a non-secret identifier (account id + role name), safe in values.
+serviceAccount:
+  create: true
+  name: modelmatch-backend
+  automount: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::832285994273:role/modelmatch-backend-irsa
+
+# ESO-synced Secret (P12) the secret env reads from. Non-secret NAME, not the values.
+appSecretName: modelmatch-app-secrets
 
 service:
   type: ClusterIP
@@ -38,3 +52,8 @@ config:
   LLM_HOURLY_TOKEN_CAP: "200000"
   PUBLIC_BASE_URL: "http://localhost:8000"
   CORS_ALLOW_ORIGINS: "http://localhost:5173"
+  # Passwordless DSN (non-secret) — the password comes from PGPASSWORD (P14 secret env).
+  # Host = the CNPG primary read-write Service (P13).
+  DATABASE_URL: "postgresql+psycopg://modelmatch@modelmatch-postgres-rw:5432/modelmatch"
+  # Chat read-only role NAME (non-secret) — must match what the P13 migration created.
+  CHAT_READONLY_DB_USER: "modelmatch_chat_ro"
