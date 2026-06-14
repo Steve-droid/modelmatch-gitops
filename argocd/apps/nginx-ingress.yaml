@@ -57,6 +57,19 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: nginx-ingress
+  # The type=LoadBalancer Service gets node ports + healthCheckNodePort + allocateLoadBalancerNodePorts
+  # assigned by the EKS cloud-controller-manager at runtime — the chart never renders them, so without
+  # this the app is perpetually OutOfSync (controller is still Healthy). Ignore those server-owned fields.
+  ignoreDifferences:
+    - group: ""
+      kind: Service
+      name: nginx-ingress-controller
+      namespace: nginx-ingress
+      jsonPointers:
+        - /spec/healthCheckNodePort
+        - /spec/allocateLoadBalancerNodePorts
+      jqPathExpressions:
+        - .spec.ports[].nodePort
   syncPolicy:
     automated:
       prune: true
@@ -64,3 +77,5 @@ spec:
     syncOptions:
       # ArgoCD owns the namespace lifecycle (gitops-only P11 — no Terraform ns).
       - CreateNamespace=true
+      # selfHeal must respect ignoreDifferences above, else it re-syncs the LB Service in a loop.
+      - RespectIgnoreDifferences=true
