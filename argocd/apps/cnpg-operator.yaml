@@ -1,0 +1,54 @@
+# P13 — CloudNativePG operator as an ArgoCD child app under the root App-of-Apps.
+#
+# The operator installs the postgresql.cnpg.io CRDs (Cluster, etc.) + the
+# cnpg-controller-manager that reconciles them. It MUST be present before the
+# modelmatch-postgres child app applies its `Cluster` CR — sync-wave "-1" makes the
+# root app reconcile this first (and the Cluster CR carries SkipDryRunOnMissingResource
+# as a belt-and-suspenders for the brief window before the CRD registers).
+#
+# Upstream Helm chart over its public HTTPS repo — anonymous read, no credentials in
+# Git/ArgoCD (same as the P11 platform child-apps; the Roey "no third-party modules"
+# rule is Terraform-only — upstream Helm charts via ArgoCD are fine).
+#
+# CRDs: the chart installs them by default (crds.create: true) with
+# helm.sh/resource-policy: keep, so they survive an app prune. ServerSideApply avoids
+# the client-side-apply annotation-size limit on the large CRDs (P11 precedent).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cnpg-operator
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://cloudnative-pg.github.io/charts
+    chart: cloudnative-pg
+    targetRevision: 0.28.3 # operator app v1.29.1 — pinned (latest stable as of 2026-06-14)
+    helm:
+      releaseName: cnpg
+      values: |
+        crds:
+          create: true
+        # Cap the controller-manager (repo rule: limits on every container; the chart
+        # ships resources: {} by default).
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cnpg-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true # cnpg-system is not a Terraform-created namespace
+      - ServerSideApply=true # large CRDs — avoid the client-side annotation-size limit

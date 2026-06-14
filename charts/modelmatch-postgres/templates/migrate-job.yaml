@@ -1,0 +1,107 @@
+{{- $img := printf "%s/%s:%s" .Values.migrate.image.registry .Values.migrate.image.repository .Values.migrate.image.tag -}}
+# Schema migration Job — `alembic upgrade head`, run as an ArgoCD PostSync HOOK.
+#
+# WHY PostSync (not PreSync): on a fresh install the Cluster is created in the main
+# sync wave, so a PreSync hook would run before Postgres exists. PostSync runs after
+# the sync phase. ArgoCD has no accurate health check for the CNPG Cluster (it reports
+# Healthy early), so the real readiness gate is the wait-for-db initContainer below:
+# it blocks until `<cluster>-rw:5432` accepts TCP connections, THEN alembic runs.
+#
+# hook-delete-policy BeforeHookCreation: Jobs are immutable, so the previous Job is
+# deleted before each new sync recreates it (also keeps the last run for debugging).
+#
+# The backend NEVER self-migrates (its image CMD is gunicorn-only) — this Job is the
+# one and only schema step. Passwords come from the P12 ESO Secret; none are in Git.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.cluster.name }}-migrate
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.cluster.name }}-migrate
+    app.kubernetes.io/part-of: modelmatch
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 3
+  # Generous ceiling: first-time cluster bootstrap (initdb + replica join) can take a
+  # couple of minutes, which the initContainer waits through.
+  activeDeadlineSeconds: 900
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.cluster.name }}-migrate
+        app.kubernetes.io/part-of: modelmatch
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+      initContainers:
+        # Wait until the primary (read-write) Service accepts connections. Uses the
+        # backend image (non-root uid 10001, Python present) — no pg_isready binary or
+        # credentials needed; a successful TCP connect means PG is serving on -rw.
+        - name: wait-for-db
+          image: {{ $img | quote }}
+          imagePullPolicy: {{ .Values.migrate.image.pullPolicy }}
+          command:
+            - python
+            - -c
+            - |
+              import socket, sys, time
+              host, port = "{{ .Values.cluster.name }}-rw", 5432
+              for _ in range(150):  # ~5 min ceiling (2s sleeps)
+                  try:
+                      with socket.create_connection((host, port), timeout=3):
+                          print(f"{host}:{port} accepting connections", flush=True)
+                          sys.exit(0)
+                  except OSError as e:
+                      print(f"waiting for {host}:{port} ({e})", flush=True)
+                      time.sleep(2)
+              sys.exit(f"timed out waiting for {host}:{port}")
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+      containers:
+        - name: migrate
+          image: {{ $img | quote }}
+          imagePullPolicy: {{ .Values.migrate.image.pullPolicy }}
+          # Runs from the image WORKDIR /app (alembic.ini + migrations/ shipped there;
+          # `alembic` is on PATH via the image's /app/.venv/bin).
+          command: ["alembic", "upgrade", "head"]
+          env:
+            # libpq (psycopg) reads PGPASSWORD at connect time, so the DSN stays
+            # PASSWORDLESS — URL-reserved chars in the password (@ : / % ? #) can never
+            # break DATABASE_URL parsing. (P12 syncs only the raw password.)
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.appSecretName }}
+                  key: POSTGRES_PASSWORD
+            # Passwordless DSN; host = the CNPG primary (read-write) Service.
+            - name: DATABASE_URL
+              value: postgresql+psycopg://{{ .Values.cluster.owner }}@{{ .Values.cluster.name }}-rw:5432/{{ .Values.cluster.database }}
+            # Non-secret: the chat read-only role name the migration CREATE/ALTERs.
+            - name: CHAT_READONLY_DB_USER
+              value: {{ .Values.chat.readonlyUser | quote }}
+            # The chat read-only role's LOGIN password (set by the chat-role migration).
+            - name: CHAT_READONLY_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.appSecretName }}
+                  key: CHAT_READONLY_DB_PASSWORD
+            # Required only because the chat-role migration calls app.config.get_settings(),
+            # which constructs the full Settings (jwt_secret has no default). Not otherwise
+            # used by migrations. LLM_CLIENT is left unset (defaults to `fake`) so the
+            # real-chat-password validator is skipped while the real password is still set.
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.appSecretName }}
+                  key: JWT_SECRET
+          resources:
+            {{- toYaml .Values.migrate.resources | nindent 12 }}
