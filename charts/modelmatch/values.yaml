@@ -41,10 +41,11 @@ ingress:
   enabled: true
   # The IngressClass F5 registers (verify: `kubectl get ingressclass`).
   className: nginx
-  # Which cert-manager ClusterIssuer (charts/cluster-issuers) signs the certs. Start on
-  # letsencrypt-staging to validate HTTP-01, then flip to letsencrypt-prod for the trusted
-  # cert (delete the staging tls Secrets so the prod certs re-issue).
-  clusterIssuer: letsencrypt-staging
+  # Which cert-manager ClusterIssuer (charts/cluster-issuers) signs the certs. We validate
+  # HTTP-01 on letsencrypt-staging first, then flip to letsencrypt-prod (current) for the
+  # trusted cert. On a fresh rebuild, if a stale staging cert lingers, delete the
+  # modelmatch-app-tls / modelmatch-api-tls Secrets so the prod certs re-issue.
+  clusterIssuer: letsencrypt-prod
   # MUST stay false. F5 force-redirects HTTP->HTTPS when an Ingress has TLS, which 301s the
   # ACME challenge (LE fetches over plain HTTP:80) and would also break renewals. We hand
   # out https:// URLs, so no auto-redirect is needed.
