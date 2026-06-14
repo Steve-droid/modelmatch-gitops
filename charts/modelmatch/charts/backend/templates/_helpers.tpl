@@ -35,3 +35,18 @@ app.kubernetes.io/component: backend
 {{- $registry := .Values.image.registry | default .Values.global.imageRegistry -}}
 {{- printf "%s/%s:%s" $registry .Values.image.repository (.Values.image.tag | toString) -}}
 {{- end -}}
+
+{{/*
+ServiceAccount name. PINNED via .Values.serviceAccount.name (default modelmatch-backend)
+rather than derived from the release name: IRSA role A's trust policy is bound to the
+exact subject system:serviceaccount:app:modelmatch-backend (P7), so the SA name must not
+drift if the release/Application is ever renamed. Falls back to backend.fullname only if
+the value is cleared.
+*/}}
+{{- define "backend.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
+{{- default (include "backend.fullname" .) .Values.serviceAccount.name -}}
+{{- else -}}
+{{- default "default" .Values.serviceAccount.name -}}
+{{- end -}}
+{{- end -}}

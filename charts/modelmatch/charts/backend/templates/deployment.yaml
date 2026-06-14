@@ -14,6 +14,8 @@ spec:
       labels:
         {{- include "backend.labels" . | nindent 8 }}
     spec:
+      # IRSA identity (P14): role A reaches Bedrock + S3 with no static keys.
+      serviceAccountName: {{ include "backend.serviceAccountName" . }}
       securityContext:
         runAsNonRoot: true
         # The backend image's USER is the NAME "appuser" (uid/gid 10001 per its
@@ -30,12 +32,37 @@ spec:
             - name: http
               containerPort: {{ .Values.containerPort }}
               protocol: TCP
-          # Non-secret config only. The secrets (JWT_SECRET, the DB password, and the
-          # chat read-only DB password) arrive as Secret-backed env via ESO (P12) and
-          # get wired in at P14. LLM_HOURLY_TOKEN_CAP is a non-secret ConfigMap knob.
+          # Non-secret config (incl. the PASSWORDLESS DATABASE_URL + CHAT_READONLY_DB_USER).
+          # LLM_HOURLY_TOKEN_CAP is a non-secret ConfigMap knob, not a secret.
           envFrom:
             - configMapRef:
                 name: {{ include "backend.fullname" . }}-config
+          # Secrets (P14) — explicit per-key secretKeyRef into the ESO-synced Secret
+          # {{ .Values.appSecretName }} (synced from Secrets Manager by ESO/role B, P12).
+          # NEVER in the ConfigMap/values. Only the exact keys the backend needs.
+          env:
+            # libpq (psycopg) reads PGPASSWORD at connect time → the ConfigMap's
+            # DATABASE_URL stays passwordless, so URL-reserved chars (@ : / % ? #) in the
+            # generated password can never break DSN parsing. Pairs with that DATABASE_URL.
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.appSecretName }}
+                  key: POSTGRES_PASSWORD
+            # JWT signing key — required, no default (config fails fast otherwise).
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.appSecretName }}
+                  key: JWT_SECRET
+            # Chat read-only role's LOGIN password. With LLM_CLIENT=bedrock the backend
+            # rejects a placeholder here (it's a live DB credential). The chat DSN
+            # (chat_database_url) carries this inline, so it ignores PGPASSWORD.
+            - name: CHAT_READONLY_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.appSecretName }}
+                  key: CHAT_READONLY_DB_PASSWORD
           livenessProbe:
             httpGet:
               path: /healthz

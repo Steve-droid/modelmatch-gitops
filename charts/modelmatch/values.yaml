@@ -20,9 +20,22 @@ backend:
   replicaCount: 1
   image:
     repository: modelmatch-backend
-    tag: "1.0.0"
+    # 1.0.1 = the boto3-bearing image (built with --extra bedrock) so the in-cluster
+    # Bedrock surface works; 1.0.0 had no boto3. FE stays 1.0.0 (unchanged).
+    tag: "1.0.1"
     pullPolicy: IfNotPresent
   containerPort: 8000
+  # IRSA (P14): the backend SA assumes role A (Bedrock + S3) — no static keys. The SA
+  # NAME is pinned (role A's trust = system:serviceaccount:app:modelmatch-backend); the
+  # role-arn is a non-secret identifier (account id + role name), safe to keep here.
+  serviceAccount:
+    create: true
+    name: modelmatch-backend
+    automount: true
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::832285994273:role/modelmatch-backend-irsa
+  # The ESO-synced k8s Secret (P12) the backend's secret env reads from. NAME only.
+  appSecretName: modelmatch-app-secrets
   service:
     type: ClusterIP
     port: 8000
@@ -48,6 +61,11 @@ backend:
     # TODO (P15): replace localhost with the public sslip.io ingress host.
     PUBLIC_BASE_URL: "http://localhost:8000"
     CORS_ALLOW_ORIGINS: "http://localhost:5173"
+    # Passwordless DSN (non-secret); the password is injected via PGPASSWORD (P14
+    # secret env). Host = the CNPG primary read-write Service (P13).
+    DATABASE_URL: "postgresql+psycopg://modelmatch@modelmatch-postgres-rw:5432/modelmatch"
+    # Chat read-only role NAME (non-secret) — must match the P13 migration's role.
+    CHAT_READONLY_DB_USER: "modelmatch_chat_ro"
 
 frontend:
   enabled: true
