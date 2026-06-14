@@ -37,6 +37,11 @@ spec:
       restartPolicy: Never
       securityContext:
         runAsNonRoot: true
+        # The backend image declares USER as the NAME "appuser" (uid/gid 10001 per its
+        # Dockerfile). runAsNonRoot can't verify a non-numeric user, so the kubelet
+        # rejects the container with CreateContainerConfigError unless we pin the uid.
+        runAsUser: 10001
+        runAsGroup: 10001
       initContainers:
         # Wait until the primary (read-write) Service accepts connections. Uses the
         # backend image (non-root uid 10001, Python present) — no pg_isready binary or
