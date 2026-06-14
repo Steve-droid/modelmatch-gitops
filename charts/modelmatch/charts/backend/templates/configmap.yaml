@@ -8,3 +8,9 @@ data:
   {{- range $key, $val := .Values.config }}
   {{ $key }}: {{ $val | quote }}
   {{- end }}
+  # P15 — public URLs derived from the single source of truth (global.sslipIp), so the
+  # FE/BE never drift. The browser hits these; they are NOT in-cluster Service DNS.
+  #   PUBLIC_BASE_URL   = the backend's own public host (used in the /ci-setup snippet)
+  #   CORS_ALLOW_ORIGINS = the FE origin allowed to call the cross-origin API
+  PUBLIC_BASE_URL: {{ printf "https://api.%s.sslip.io" (required "global.sslipIp must be set — run scripts/recompute-host.sh" .Values.global.sslipIp) | quote }}
+  CORS_ALLOW_ORIGINS: {{ printf "https://app.%s.sslip.io" (required "global.sslipIp must be set — run scripts/recompute-host.sh" .Values.global.sslipIp) | quote }}

@@ -1,0 +1,32 @@
+# Let's Encrypt ACME ClusterIssuers (cluster-scoped). Consumed by the umbrella Ingress
+# via the cert-manager.io/cluster-issuer annotation. HTTP-01 challenge is solved over
+# port 80 through the single F5 nginx ingress ELB (NOT DNS-01 — sslip.io can't host the
+# ACME TXT records). NOTHING here is a secret: the email is already public (README +
+# every commit author); cert-manager generates + stores the ACME account key and the
+# issued certs as in-cluster Secrets on its own.
+
+# LE account contact (expiry-notice email). Not a secret.
+email: stevelevit230@gmail.com
+
+# The F5-registered IngressClass cert-manager stamps on the temporary HTTP-01 solver
+# Ingress so the F5 controller serves /.well-known/acme-challenge/* — must match the
+# umbrella ingress.className.
+ingressClassName: nginx
+
+# Staging first: validate the HTTP-01 plumbing end-to-end without burning prod rate
+# limits. Issues an UNTRUSTED cert (browser warning) — expected. Flip the umbrella
+# ingress.clusterIssuer to the prod issuer once staging goes Ready.
+staging:
+  enabled: true
+  name: letsencrypt-staging
+  server: https://acme-staging-v02.api.letsencrypt.org/directory
+  # cert-manager stores the ACME account private key in this (auto-created) Secret.
+  privateKeySecretName: letsencrypt-staging-account-key
+
+# Prod: the trusted cert (the P15 "done means"). Created alongside staging; the
+# umbrella just points its annotation at whichever issuer is active.
+prod:
+  enabled: true
+  name: letsencrypt-prod
+  server: https://acme-v02.api.letsencrypt.org/directory
+  privateKeySecretName: letsencrypt-prod-account-key

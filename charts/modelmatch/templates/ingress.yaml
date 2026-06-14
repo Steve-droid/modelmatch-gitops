@@ -1,0 +1,65 @@
+{{- if .Values.ingress.enabled }}
+{{- /*
+P15 — the cluster's SINGLE Kubernetes Ingress. Routes both services through P11's one
+F5 NGINX ingress ELB; it never creates a LoadBalancer itself.
+
+Host-based (not path-based): two sslip.io subdomains that resolve to the same ELB IP.
+  app.<ip>.sslip.io -> frontend Service (the SPA at /)
+  api.<ip>.sslip.io -> backend  Service (FastAPI routes live at ROOT — no /api prefix,
+                                          so NO rewrite annotation is needed)
+Both hosts derive from the single source of truth global.sslipIp (recompute per rebuild).
+
+TLS: cert-manager's ingress-shim watches this Ingress (cert-manager.io/cluster-issuer
+annotation), issues a Let's Encrypt cert (HTTP-01 over :80 through this same ELB) covering
+both hosts, and stores it in the tls secret — which the tls block then serves on :443.
+*/}}
+{{- $ip := required "global.sslipIp must be set — run scripts/recompute-host.sh before sync" .Values.global.sslipIp -}}
+{{- $appHost := printf "app.%s.sslip.io" $ip -}}
+{{- $apiHost := printf "api.%s.sslip.io" $ip -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: modelmatch
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: modelmatch
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: modelmatch
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    # ingress-shim: issue/renew the cert for the tls hosts via this ClusterIssuer and
+    # store it in tls.secretName. Flip staging -> letsencrypt-prod in values for trust.
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.clusterIssuer | quote }}
+spec:
+  # F5-registered IngressClass (kubectl get ingressclass). NOT community ingress-nginx.
+  ingressClassName: {{ .Values.ingress.className | quote }}
+  tls:
+    - hosts:
+        - {{ $appHost | quote }}
+        - {{ $apiHost | quote }}
+      secretName: {{ .Values.ingress.tlsSecretName | quote }}
+  rules:
+    # FE: the SPA at the root of the app host.
+    - host: {{ $appHost | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.ingress.frontend.service | quote }}
+                port:
+                  number: {{ .Values.ingress.frontend.port }}
+    # BE: FastAPI at the root of the api host (no prefix, no rewrite).
+    - host: {{ $apiHost | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.ingress.backend.service | quote }}
+                port:
+                  number: {{ .Values.ingress.backend.port }}
+{{- end }}

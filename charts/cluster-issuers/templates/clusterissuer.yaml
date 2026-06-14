@@ -1,0 +1,45 @@
+{{- /*
+Let's Encrypt ClusterIssuers (HTTP-01). Cluster-scoped — no namespace. Each issuer
+has its own ACME account key Secret (cert-manager creates it). The solver uses the F5
+nginx IngressClass so cert-manager's temporary challenge Ingress is served by the one
+ingress controller over :80.
+*/}}
+{{- if .Values.staging.enabled }}
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .Values.staging.name }}
+  labels:
+    app.kubernetes.io/part-of: modelmatch
+    app.kubernetes.io/component: cluster-issuer
+spec:
+  acme:
+    server: {{ .Values.staging.server | quote }}
+    email: {{ .Values.email | quote }}
+    privateKeySecretRef:
+      name: {{ .Values.staging.privateKeySecretName }}
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: {{ .Values.ingressClassName }}
+{{- end }}
+{{- if .Values.prod.enabled }}
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .Values.prod.name }}
+  labels:
+    app.kubernetes.io/part-of: modelmatch
+    app.kubernetes.io/component: cluster-issuer
+spec:
+  acme:
+    server: {{ .Values.prod.server | quote }}
+    email: {{ .Values.email | quote }}
+    privateKeySecretRef:
+      name: {{ .Values.prod.privateKeySecretName }}
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: {{ .Values.ingressClassName }}
+{{- end }}

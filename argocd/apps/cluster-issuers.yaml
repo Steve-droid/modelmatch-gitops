@@ -1,0 +1,40 @@
+# P15 — cluster-issuers as an ArgoCD child app under the root App-of-Apps.
+#
+# Renders the in-repo charts/cluster-issuers chart: the Let's Encrypt staging + prod
+# ClusterIssuers (HTTP-01). Cluster-scoped CRs that depend on cert-manager's CRDs (the
+# cert-manager child app, P11). Deliberately its OWN child app, NOT an umbrella subchart
+# — ClusterIssuers are cluster-scoped + cert-manager-tied, not part of the app-ns product
+# chart (same idiom as app-secrets/cnpg-operator).
+#
+# sync-wave "1": apply after cert-manager (default wave "0") so its CRDs exist. The root
+# app-of-apps creates child Applications in wave order, but cert-manager's CRD install is
+# async — if the ClusterIssuer briefly applies before the CRD is established, ArgoCD
+# auto-sync simply retries until it succeeds (eventually consistent).
+#
+# Points at OUR public repo (anonymous read; same as the other child apps).
+# destination.namespace is nominal for cluster-scoped resources (cert-manager); the
+# ClusterIssuers themselves carry no namespace. No CreateNamespace (cert-manager ns is
+# owned by its own child app).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cluster-issuers
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  # Cascade-delete the ClusterIssuers if this Application is pruned (YAML removed from Git).
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Steve-droid/modelmatch-gitops.git
+    targetRevision: main
+    path: charts/cluster-issuers
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
