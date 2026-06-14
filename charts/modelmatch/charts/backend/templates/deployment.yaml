@@ -24,8 +24,9 @@ spec:
             - name: http
               containerPort: {{ .Values.containerPort }}
               protocol: TCP
-          # Non-secret config only. Secrets (JWT_SECRET, DATABASE_URL, LLM cap)
-          # arrive as a Secret-backed env source via ESO in P12.
+          # Non-secret config only. The secrets (JWT_SECRET, the DB password, and the
+          # chat read-only DB password) arrive as Secret-backed env via ESO (P12) and
+          # get wired in at P14. LLM_HOURLY_TOKEN_CAP is a non-secret ConfigMap knob.
           envFrom:
             - configMapRef:
                 name: {{ include "backend.fullname" . }}-config

@@ -1,0 +1,38 @@
+# app-secrets values — every knob the SecretStore + ExternalSecret need. NO secret
+# values here (or anywhere in Git): only NAMES, the region, and the refresh cadence.
+# The actual JWT / DB passwords live ONLY in AWS Secrets Manager (`modelmatch/app`),
+# created out-of-band; ESO reads them with the controller pod's role-B IRSA.
+
+# Namespace the SecretStore + ExternalSecret live in, and where the synced K8s
+# Secret lands. `app` is Terraform-created (P10) — this chart does NOT create it.
+namespace: app
+
+aws:
+  # Region of the AWS Secrets Manager API ESO calls (= where the secret lives).
+  region: ap-south-1
+  # The SOURCE secret in AWS Secrets Manager (a JSON blob). Created out-of-band via
+  # the gated AWS CLI; its name matches role B's resource glob `modelmatch/app-??????`
+  # (the 6 random chars AWS appends), so the IRSA policy authorizes GetSecretValue.
+  sourceSecretName: modelmatch/app
+
+# The namespaced SecretStore's name, referenced by the ExternalSecret below.
+secretStoreName: aws-secretsmanager
+
+# The K8s Secret ESO creates/keeps in sync in the `app` ns. P13 (Postgres password)
+# and P14 (backend JWT_SECRET + DATABASE_URL composition + chat-RO password) mount it.
+targetSecretName: modelmatch-app-secrets
+
+# How often ESO reconciles the target Secret from Secrets Manager. Platform secrets
+# rotate rarely; 1h is plenty (also the ESO default).
+refreshInterval: 1h
+
+# The JSON properties pulled 1:1 from the source secret into the target K8s Secret.
+# Explicit list (not dataFrom/extract) so the target carries EXACTLY these keys and a
+# new key added to the AWS secret never silently lands in the cluster.
+#   JWT_SECRET                 - backend HS256 signing key (required, no default)
+#   POSTGRES_PASSWORD          - main DB credential; backend composes DATABASE_URL at P14
+#   CHAT_READONLY_DB_PASSWORD  - the read-only chat role's live credential (P13/P14)
+keys:
+  - JWT_SECRET
+  - POSTGRES_PASSWORD
+  - CHAT_READONLY_DB_PASSWORD
