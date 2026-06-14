@@ -16,6 +16,12 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+        # The backend image's USER is the NAME "appuser" (uid/gid 10001 per its
+        # Dockerfile). runAsNonRoot can't verify a non-numeric user, so the kubelet
+        # rejects the container with CreateContainerConfigError unless we pin the uid.
+        # (The frontend image's USER is numeric (101), so it needs no equivalent.)
+        runAsUser: 10001
+        runAsGroup: 10001
       containers:
         - name: backend
           image: {{ include "backend.image" . }}
