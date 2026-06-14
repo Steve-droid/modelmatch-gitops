@@ -18,3 +18,6 @@ root app is **Synced / Healthy** with no managed resources — exactly the skele
 
 Each child Application will set its own `source` (this repo + a chart path, or an upstream chart),
 `destination` namespace (`app` / `monitoring` / `logging` — all pre-created), and inherit auto-sync.
+
+> _Auto-sync verified 2026-06-14 (P10): a commit to this path is reconciled by ArgoCD with no manual
+> action (no webhook yet — that's P16; ArgoCD polls the repo)._
