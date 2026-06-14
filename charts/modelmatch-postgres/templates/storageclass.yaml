@@ -1,0 +1,30 @@
+# gp3 StorageClass backed by the AWS EBS CSI driver (provisioner ebs.csi.aws.com).
+#
+# WHY OUR OWN SC: the cluster's only StorageClass is the default `gp2`, which uses the
+# LEGACY in-tree provisioner `kubernetes.io/aws-ebs` — NOT the CSI driver. The
+# persistence requirement ([[postgres-ebs-csi-persistence]], Roey 2026-06-10) is
+# explicitly CSI-backed, so we declare a gp3 SC on the CSI provisioner. The EBS CSI
+# driver + its IRSA are already installed (infra P4) — this only adds the SC.
+#
+# volumeBindingMode: WaitForFirstConsumer — the volume is created in the SAME AZ as
+# the pod that first claims it. EBS volumes are AZ-bound and single-attach, and our
+# nodes span 2 AZs, so binding must wait for the scheduler to place the pod.
+#
+# reclaimPolicy: Delete — deleting the PVC deletes the underlying EBS volume (no
+# cross-rebuild survival; see values.yaml). Cluster-scoped resource (no namespace).
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .Values.storageClass.name }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/part-of: modelmatch
+  annotations:
+    # Apply this SC before the Cluster's PVCs are provisioned.
+    argocd.argoproj.io/sync-wave: "-1"
+provisioner: ebs.csi.aws.com
+parameters:
+  type: {{ .Values.storageClass.type }}
+reclaimPolicy: {{ .Values.storageClass.reclaimPolicy }}
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true

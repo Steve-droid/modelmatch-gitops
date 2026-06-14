@@ -1,0 +1,109 @@
+# modelmatch-postgres values — every knob the CNPG Cluster, its gp3 StorageClass,
+# the CNPG owner-credential ExternalSecret, and the migrate Job need.
+#
+# NO secret VALUES here (or anywhere in Git): only names, sizes, and the region/db
+# identifiers. Every password comes from AWS Secrets Manager via ESO (P12) — either
+# the platform Secret `modelmatch-app-secrets` (migrate Job) or the basic-auth Secret
+# this chart re-shapes from the SAME source value (CNPG owner role).
+
+# Namespace everything lands in. `app` is Terraform-created (P10); this chart does
+# NOT create it (the ArgoCD child app has no CreateNamespace).
+namespace: app
+
+# ── The CloudNativePG Cluster ────────────────────────────────────────────────
+cluster:
+  # Cluster name → CNPG derives the Services from it:
+  #   <name>-rw  (primary, read-write)  ← the host the migrate Job + P14 backend use
+  #   <name>-ro  (replicas, read-only)
+  #   <name>-r   (any instance, read)
+  name: modelmatch-postgres
+  # 1 primary + 1 streaming-replicated secondary (true HA, not two unsynced pods).
+  instances: 2
+  # CNPG operand image — PostgreSQL 16, pinned to a SPECIFIC minor + flavor (CNPG warns
+  # against major-only tags like `:16`, which float and make deployments non-deterministic).
+  # `system-trixie` is CNPG's current default base for recent operator versions.
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.10-system-trixie
+  # initdb bootstrap: the application database + its owner role (both `modelmatch`,
+  # matching the app's DATABASE_URL contract). The owner password comes from the
+  # basic-auth Secret below (appUserSecret).
+  database: modelmatch
+  owner: modelmatch
+  # Let CNPG drive minor-version / failover updates without manual approval.
+  primaryUpdateStrategy: unsupervised
+  # No superuser password is generated/exposed. The migrate Job connects as the owner
+  # `modelmatch`, which postInitApplicationSQL grants CREATEROLE + schema-public
+  # ownership so it can create the chat read-only role + view. TRADE-OFF (not pure
+  # least-privilege): that CREATEROLE is permanent and the P14 backend reuses this same
+  # owner — a future hardening is to revoke CREATEROLE after migrations or move role
+  # management to CNPG `managed.roles`. The migration needs it (its ALTER ROLE ...
+  # PASSWORD requires CREATEROLE), so P13 keeps it on the owner.
+  enableSuperuserAccess: false
+  # Per-instance resource caps (repo rule: limits on every container). Sized for the
+  # 2× t3a.medium cluster — two instances ≈ 512Mi requested total.
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  # Modest PG tuning for a small node.
+  parameters:
+    shared_buffers: 128MB
+    max_connections: "100"
+
+# ── Storage: gp3 StorageClass (EBS CSI) + per-instance PVC ────────────────────
+# The default cluster `gp2` StorageClass uses the LEGACY in-tree provisioner
+# (kubernetes.io/aws-ebs), NOT the EBS CSI driver — so we author our own gp3 SC on
+# the CSI provisioner (the persistence requirement is explicitly CSI-backed).
+storageClass:
+  name: modelmatch-gp3
+  type: gp3
+  # Delete: no cross-rebuild survival. platform/ is destroyed daily for cost, so a
+  # retained volume would be a recurring EBS orphan fighting the FinOps story; the
+  # schema is recreated by the migrate hook and demo data is re-seeded each rebuild.
+  # Pod-restart + Helm-redeploy survival (the actual requirement) still holds.
+  reclaimPolicy: Delete
+
+storage:
+  # Each CNPG instance gets one PVC of this size on the SC above.
+  size: 5Gi
+
+# ── CNPG owner credential (basic-auth Secret, re-shaped from Secrets Manager) ──
+# CNPG's bootstrap.initdb.secret expects a kubernetes.io/basic-auth Secret
+# (username + password). Our P12 platform Secret is Opaque (POSTGRES_PASSWORD only),
+# so a dedicated ExternalSecret pulls the SAME Secrets-Manager value and templates a
+# basic-auth Secret. No new plaintext — one source of truth (AWS Secrets Manager).
+appUserSecret:
+  name: modelmatch-db-app
+  # The namespaced SecretStore created in P12 (ns app; auth = ESO role-B IRSA).
+  secretStoreName: aws-secretsmanager
+  # The source JSON secret in AWS Secrets Manager.
+  sourceSecretName: modelmatch/app
+  refreshInterval: 1h
+
+# ── The migrate Job (alembic upgrade head, as a PostSync hook) ────────────────
+# Sources passwords from the P12 ESO-synced platform Secret. NEVER self-migrated by
+# the backend (the backend image's CMD is gunicorn-only; this Job is the schema step).
+appSecretName: modelmatch-app-secrets
+
+chat:
+  # Non-secret read-only chat role name (matches the app default + the migration's
+  # CHAT_READONLY_DB_USER). The role's password is the Secret CHAT_READONLY_DB_PASSWORD.
+  readonlyUser: modelmatch_chat_ro
+
+migrate:
+  image:
+    # The backend image ships migrations/ + alembic.ini; the SAME image runs the
+    # schema step (also used for the wait-for-db initContainer — one pull).
+    registry: 832285994273.dkr.ecr.ap-south-1.amazonaws.com
+    repository: modelmatch-backend
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

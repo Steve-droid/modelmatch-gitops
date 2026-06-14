@@ -1,0 +1,64 @@
+# CloudNativePG Cluster — the in-cluster PostgreSQL 16 (1 primary + 1 replica).
+#
+# The CNPG operator (separate ArgoCD child app, installed first) reconciles this CR
+# into a StatefulSet-like managed set with streaming replication, per-instance PVCs
+# on our gp3 CSI StorageClass, and the <name>-rw / <name>-ro / <name>-r Services.
+#
+# Credentials: the owner role password comes from the basic-auth Secret synced by
+# externalsecret-db-app.yaml (ESO ← Secrets Manager). No superuser password is exposed
+# (enableSuperuserAccess: false). The owner does keep CREATEROLE (granted below) — a
+# deliberate trade-off the migration needs (see values.yaml), not pure least-privilege.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ .Values.cluster.name }}
+  namespace: {{ .Values.namespace }}
+  annotations:
+    # The Cluster CRD is installed by the cnpg-operator child app (sync-wave -1). On a
+    # fresh sync the CRD can be momentarily absent when this CR is applied — skip the
+    # client dry-run so ArgoCD retries until the CRD exists instead of hard-failing.
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  instances: {{ .Values.cluster.instances }}
+  imageName: {{ .Values.cluster.imageName }}
+  primaryUpdateStrategy: {{ .Values.cluster.primaryUpdateStrategy }}
+  enableSuperuserAccess: {{ .Values.cluster.enableSuperuserAccess }}
+
+  bootstrap:
+    initdb:
+      database: {{ .Values.cluster.database }}
+      owner: {{ .Values.cluster.owner }}
+      secret:
+        name: {{ .Values.appUserSecret.name }}
+      # Run as the bootstrap superuser AFTER the owner role + app DB exist. Grants the
+      # owner what the schema migration needs (it stays non-superuser, but does gain a
+      # permanent CREATEROLE — the trade-off noted above):
+      #  - CREATEROLE     → so the migration can CREATE + ALTER...PASSWORD the chat RO role
+      #  - own schema public → so it can CREATE the chat_catalog VIEW + GRANT on it
+      postInitApplicationSQL:
+        - ALTER ROLE "{{ .Values.cluster.owner }}" CREATEROLE
+        - ALTER SCHEMA public OWNER TO "{{ .Values.cluster.owner }}"
+
+  postgresql:
+    parameters:
+      shared_buffers: {{ .Values.cluster.parameters.shared_buffers | quote }}
+      max_connections: {{ .Values.cluster.parameters.max_connections | quote }}
+
+  storage:
+    storageClass: {{ .Values.storageClass.name }}
+    size: {{ .Values.storage.size }}
+
+  resources:
+    requests:
+      cpu: {{ .Values.cluster.resources.requests.cpu }}
+      memory: {{ .Values.cluster.resources.requests.memory }}
+    limits:
+      cpu: {{ .Values.cluster.resources.limits.cpu }}
+      memory: {{ .Values.cluster.resources.limits.memory }}
+
+  # Spread the primary + replica across nodes (preferred, so it still schedules if
+  # only one node is available).
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname
+    podAntiAffinityType: preferred

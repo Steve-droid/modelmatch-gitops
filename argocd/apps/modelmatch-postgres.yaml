@@ -1,0 +1,54 @@
+# P13 — in-cluster Postgres (CNPG Cluster) + schema migration as an ArgoCD child app.
+#
+# Renders the in-repo charts/modelmatch-postgres chart: the gp3 EBS-CSI StorageClass,
+# the basic-auth ExternalSecret for the CNPG owner role, the CNPG `Cluster`
+# (1 primary + 1 replica), and the `alembic upgrade head` migrate Job (PostSync hook).
+#
+# Ordered LAST: sync-wave "1" — after BOTH the operator (wave "-1", which installs the
+# postgresql.cnpg.io CRDs) AND the P12 app-secrets app (default wave "0", which creates
+# the `aws-secretsmanager` SecretStore + the `modelmatch-app-secrets` Secret). This
+# chart's owner-credential ExternalSecret needs that SecretStore, and the migrate Job
+# needs that Secret, so waiting a wave avoids a race on a daily fresh rebuild.
+# Points at OUR public repo (anonymous read; same as app-secrets P12).
+#
+# NO CreateNamespace: `app` is Terraform-owned (P10) — single owner.
+#
+# DAY-END ORPHAN NOTE: CNPG provisions one EBS volume per instance via the gp3 SC
+# (reclaimPolicy: Delete). On a clean teardown those are deleted with their PVCs while
+# the cluster is alive; but a `terraform destroy` that nukes the cluster abruptly
+# leaves the EBS volumes orphaned. So BEFORE a platform destroy, delete this app first
+# (ArgoCD prunes the Cluster → CNPG/CSI delete the PVCs → EBS volumes go away), then
+# the nginx-ingress app/ELB, then `terraform destroy`. (Carried in the orphan ritual.)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: modelmatch-postgres
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Steve-droid/modelmatch-gitops.git
+    targetRevision: main
+    path: charts/modelmatch-postgres
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: app
+  # CNPG defaults many Cluster spec fields + continuously writes .status; ignore those
+  # so selfHeal doesn't fight the operator. (Refined at live verify if a loop appears.)
+  ignoreDifferences:
+    - group: postgresql.cnpg.io
+      kind: Cluster
+      name: modelmatch-postgres
+      namespace: app
+      jsonPointers:
+        - /status
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - RespectIgnoreDifferences=true
