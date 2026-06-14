@@ -1,0 +1,71 @@
+# P11 — cert-manager as an ArgoCD child app under the root App-of-Apps.
+#
+# Installs the upstream jetstack/cert-manager chart (controller + webhook + cainjector) and its CRDs.
+# P11 only gets cert-manager Healthy; the ClusterIssuer (Let's Encrypt HTTP-01 for the sslip.io host)
+# is P15 — NO Issuer/Certificate CRs created here, so there's no CRD-before-CR race.
+#
+# ServerSideApply=true: cert-manager's CRDs exceed the client-side-apply annotation-size limit
+# (kubectl.kubernetes.io/last-applied-configuration > 262144 bytes) — the classic ArgoCD + cert-manager
+# "metadata.annotations: Too long" failure. SSA avoids it.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://charts.jetstack.io
+    chart: cert-manager
+    targetRevision: v1.20.2 # pinned (latest stable as of 2026-06-14)
+    helm:
+      releaseName: cert-manager
+      values: |
+        # v1.20 uses crds.enabled (the old top-level installCRDs is deprecated). crds.keep defaults true.
+        crds:
+          enabled: true
+        # Lean caps on all three cert-manager components (P10 precedent).
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        webhook:
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+        cainjector:
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+        # The startupapicheck is a short-lived hook Job the chart defaults to {} resources. Cap it too.
+        startupapicheck:
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true # large CRDs — avoid the client-side-apply annotation-size limit
