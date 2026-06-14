@@ -8,6 +8,10 @@ replicaCount: 1
 # subchart render on its own too.
 global:
   imageRegistry: 832285994273.dkr.ecr.ap-south-1.amazonaws.com
+  # P15: the public-host source of truth, normally injected by the umbrella. The
+  # ConfigMap derives PUBLIC_BASE_URL/CORS_ALLOW_ORIGINS from it; this default keeps
+  # standalone render working. "0.0.0.0" = not-yet-computed sentinel.
+  sslipIp: "0.0.0.0"
 
 image:
   repository: modelmatch-backend
@@ -50,8 +54,8 @@ config:
   S3_BUCKET: "modelmatch-ingestion-sources"
   LLM_CLIENT: "bedrock"
   LLM_HOURLY_TOKEN_CAP: "200000"
-  PUBLIC_BASE_URL: "http://localhost:8000"
-  CORS_ALLOW_ORIGINS: "http://localhost:5173"
+  # P15: PUBLIC_BASE_URL + CORS_ALLOW_ORIGINS are derived from global.sslipIp in the
+  # ConfigMap template (single source of truth) — not literals here.
   # Passwordless DSN (non-secret) — the password comes from PGPASSWORD (P14 secret env).
   # Host = the CNPG primary read-write Service (P13).
   DATABASE_URL: "postgresql+psycopg://modelmatch@modelmatch-postgres-rw:5432/modelmatch"

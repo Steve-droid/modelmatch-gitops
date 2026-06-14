@@ -6,6 +6,9 @@ replicaCount: 1
 
 global:
   imageRegistry: 832285994273.dkr.ecr.ap-south-1.amazonaws.com
+  # P15: public-host source of truth, normally injected by the umbrella. The ConfigMap
+  # derives API_BASE_URL from it; this default keeps standalone render working.
+  sslipIp: "0.0.0.0"
 
 image:
   repository: modelmatch-frontend
@@ -26,7 +29,7 @@ resources:
     cpu: 250m
     memory: 128Mi
 
-config:
-  # Browser-facing public API host (not the in-cluster Service DNS).
-  # TODO (P15): replace localhost with the public sslip.io ingress host.
-  API_BASE_URL: "http://localhost:8000"
+config: {}
+  # P15: API_BASE_URL is browser-facing (the PUBLIC api.<ip> host, not the in-cluster
+  # Service DNS) and is derived from global.sslipIp in the ConfigMap template (single
+  # source of truth) — intentionally not a literal here.

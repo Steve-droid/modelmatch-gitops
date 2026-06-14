@@ -14,6 +14,42 @@
 global:
   # ECR registry (account 832285994273, ap-south-1). Shared by all subcharts.
   imageRegistry: 832285994273.dkr.ecr.ap-south-1.amazonaws.com
+  # P15 — the SINGLE source of truth for the public host. It is the current public
+  # IP of the one ingress ELB (P11). The ingress ELB has no static IP, so this is a
+  # RECOMPUTE, not a stable name: each platform rebuild gives a new IP. Both public
+  # hosts derive from it (sslip.io maps anything.<ip>.sslip.io -> <ip>):
+  #   FE (browser):  app.<sslipIp>.sslip.io
+  #   BE (the API):  api.<sslipIp>.sslip.io
+  # Recompute with scripts/recompute-host.sh (read-only discovery + local edit),
+  # then commit so ArgoCD syncs and cert-manager (re)issues the cert. See README.
+  # "0.0.0.0" is the not-yet-computed sentinel (renders a valid-but-dead host so
+  # `helm lint`/`template` pass; it never routes — run the script before syncing).
+  sslipIp: "15.207.69.91"
+
+# P15 — the single Kubernetes Ingress (FE + BE behind P11's ONE F5 nginx ELB).
+# Host-based: app.<ip> -> frontend, api.<ip> -> backend (backend stays at root, no
+# rewrite). cert-manager issues the TLS cert via the cluster-issuer annotation.
+ingress:
+  enabled: true
+  # The IngressClass F5 registers (verify: `kubectl get ingressclass`). F5's
+  # nginx.org/* annotations differ from community ingress-nginx — host-based routing
+  # needs none of them (no rewrite), just this class.
+  className: nginx
+  # Which cert-manager ClusterIssuer (charts/cluster-issuers) signs the cert. Start
+  # on letsencrypt-staging to validate HTTP-01 end-to-end, then flip to
+  # letsencrypt-prod for the trusted cert (and delete the staging tls Secret so the
+  # prod cert re-issues).
+  clusterIssuer: letsencrypt-staging
+  # cert-manager writes the issued cert here (app ns); the Ingress tls block reads it.
+  tlsSecretName: modelmatch-tls
+  # Service backends. Names = the subchart fullnames (release "modelmatch" + chart
+  # name); the backend SA name is already pinned for IRSA, so these are stable.
+  frontend:
+    service: modelmatch-frontend
+    port: 80
+  backend:
+    service: modelmatch-backend
+    port: 8000
 
 backend:
   enabled: true
@@ -58,9 +94,9 @@ backend:
     S3_BUCKET: "modelmatch-ingestion-sources"
     LLM_CLIENT: "bedrock"            # in-cluster path uses Bedrock via IRSA (P14)
     LLM_HOURLY_TOKEN_CAP: "200000"
-    # TODO (P15): replace localhost with the public sslip.io ingress host.
-    PUBLIC_BASE_URL: "http://localhost:8000"
-    CORS_ALLOW_ORIGINS: "http://localhost:5173"
+    # P15: PUBLIC_BASE_URL (api.<ip> host) + CORS_ALLOW_ORIGINS (app.<ip> origin) are
+    # NOT literals here — the backend ConfigMap template derives them from
+    # global.sslipIp so the public host has one source of truth.
     # Passwordless DSN (non-secret); the password is injected via PGPASSWORD (P14
     # secret env). Host = the CNPG primary read-write Service (P13).
     DATABASE_URL: "postgresql+psycopg://modelmatch@modelmatch-postgres-rw:5432/modelmatch"
@@ -85,8 +121,8 @@ frontend:
     limits:
       cpu: 250m
       memory: 128Mi
-  config:
-    # Browser-facing: the user's browser (not nginx) calls the backend, so this is
-    # the PUBLIC ingress host, not the in-cluster backend Service DNS.
-    # TODO (P15): replace localhost with the public sslip.io ingress host.
-    API_BASE_URL: "http://localhost:8000"
+  config: {}
+    # P15: API_BASE_URL is browser-facing (the user's browser, not nginx, calls the
+    # backend) = the PUBLIC api.<ip> host, NOT the in-cluster Service DNS. It is
+    # derived from global.sslipIp in the frontend ConfigMap template (single source
+    # of truth), so it is intentionally not a literal here.

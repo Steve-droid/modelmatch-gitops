@@ -1,0 +1,16 @@
+# cluster-issuers — cert-manager ClusterIssuers for ModelMatch ingress TLS (P15).
+#
+# A tiny standalone chart (its own ArgoCD child app), deliberately NOT an umbrella
+# subchart: ClusterIssuers are CLUSTER-SCOPED resources tied to cert-manager, not the
+# app-namespaced product chart. This matches the repo idiom — each cross-cutting
+# concern (app-secrets, cnpg-operator, ...) is its own child app.
+#
+# Holds the Let's Encrypt ACME ClusterIssuers (staging + prod, HTTP-01). The umbrella
+# Ingress references one of them by name via the cert-manager.io/cluster-issuer
+# annotation. Depends on the cert-manager CRDs (the cert-manager child app, P11).
+apiVersion: v2
+name: cluster-issuers
+description: cert-manager Let's Encrypt ClusterIssuers (HTTP-01) for ModelMatch ingress TLS.
+type: application
+version: 0.1.0
+appVersion: "1.20.2"

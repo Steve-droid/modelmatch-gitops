@@ -4,7 +4,7 @@ The Terraform-seeded **root App-of-Apps** (see `../README.md`) watches this dire
 everything in it. Drop **one ArgoCD `Application` manifest per app** here and ArgoCD picks it up — no
 `kubectl apply`.
 
-## State: platform controllers + secrets + in-cluster Postgres (through P13)
+## State: full E12 stack — controllers + secrets + Postgres + app + ingress/TLS (through P15, E12 complete)
 
 | File | Child app | Chart (pinned) | Namespace | Slice |
 |---|---|---|---|---|
@@ -14,6 +14,10 @@ everything in it. Drop **one ArgoCD `Application` manifest per app** here and Ar
 | `app-secrets.yaml` | `app-secrets` | _in-repo_ `charts/app-secrets` (SecretStore + ExternalSecret) | `app` | P12 |
 | `cnpg-operator.yaml` | `cnpg-operator` | `cloudnative-pg` **0.28.3** (operator v1.29.1) | `cnpg-system` | P13 |
 | `modelmatch-postgres.yaml` | `modelmatch-postgres` | _in-repo_ `charts/modelmatch-postgres` (CNPG `Cluster` + gp3 SC + migrate Job) | `app` | P13 |
+| `modelmatch.yaml` | `modelmatch` | _in-repo_ `charts/modelmatch` (umbrella: **FE + BE**; + the P15 `Ingress`) | `app` | P14 |
+| `cluster-issuers.yaml` | `cluster-issuers` | _in-repo_ `charts/cluster-issuers` (LE staging+prod `ClusterIssuer`s, HTTP-01) | `cert-manager`¹ | P15 |
+
+¹ destination namespace is nominal — `ClusterIssuer`s are **cluster-scoped** (carry no namespace).
 
 The **upstream-chart** apps (nginx-ingress, cert-manager, external-secrets, cnpg-operator) are thin
 `Application`s → a pinned chart + inline `helm.values`. The **in-repo-chart** apps (app-secrets,
@@ -43,8 +47,11 @@ Job needs the `modelmatch-app-secrets` Secret (avoids a fresh-rebuild race). Its
 - **nginx-ingress** provisions the cluster's **single ingress LB** (controller `Service type=LoadBalancer`).
   It runs **standard-Ingress-only** (`enableCustomResources: false` + `skipCrds: true`) — we use plain
   Kubernetes `Ingress`, not F5's VirtualServer/TransportServer CRDs, so the chart's 12 CRDs are skipped.
-  Actual `Ingress` routing + TLS (`ClusterIssuer`, sslip.io host) is **P15**.
-- **cert-manager** installs its CRDs; no `ClusterIssuer`/`Certificate` yet (**P15**).
+  **P15** added the actual routing: a single host-based `Ingress` (in the `modelmatch` umbrella) sending
+  `app.<ip>.sslip.io` → FE and `api.<ip>.sslip.io` → BE through this same one LB (no second LB).
+- **cert-manager** installed its CRDs at P11; **P15** added the `cluster-issuers` app (LE staging+prod
+  `ClusterIssuer`s, HTTP-01 over the `nginx` class). The umbrella `Ingress`'s `cert-manager.io/cluster-issuer`
+  annotation drives the `Certificate` → the `modelmatch-tls` Secret it serves on :443.
 - **external-secrets** runs with its main controller SA `external-secrets` annotated with IRSA **role B**
   (`modelmatch-eso-irsa`). The `SecretStore`/`ExternalSecret` that pull secrets from AWS Secrets Manager
   are **P12**.
@@ -53,11 +60,18 @@ Job needs the `modelmatch-app-secrets` Secret (avoids a fresh-rebuild race). Its
 > *not* tracked by Terraform. Before a platform `terraform destroy`, delete the `nginx-ingress` app/Service
 > first so the CCM releases the LB (else it orphans). Keep it to **one** LB (cert-manager/ESO create none).
 
+**P15 ordering (sync-wave):** `cluster-issuers` is wave **`1`** so it applies after `cert-manager` (default
+wave `0`) — its `ClusterIssuer`s need the cert-manager CRDs. cert-manager's CRD install is async across
+child apps, so on a fresh rebuild an early apply just retries under auto-sync until the CRD registers
+(eventually consistent). The `Ingress` ships inside the `modelmatch` umbrella (wave `2`), so by the time it
+requests a cert the issuers already exist.
+
 ## What gets added here next
 
-| Slice | Child Application(s) |
-|---|---|
-| **P14** | `modelmatch` — the product umbrella (`charts/modelmatch/`: **FE + BE only**; Postgres is delivered separately by the `modelmatch-postgres` app above, P13). Annotates the backend SA with IRSA role A; backend reaches Ready (DB + secrets + migrations already present). Backend `DATABASE_URL` host = **`modelmatch-postgres-rw`**. |
+**E12 is complete** — no more child apps until **E13 (observability)**: `kube-prometheus-stack` (P20) and
+the EFK/logging stack (P23) will each land here as their own `Application`. E11 (Jenkins CI/CD) adds no
+child apps — its Deploy stage only **bumps image tags** in `charts/modelmatch/values.yaml`, which ArgoCD
+then reconciles.
 
 > _Auto-sync verified 2026-06-14 (P10): a commit to this path is reconciled by ArgoCD with no manual
 > action (no webhook yet — that's P16; ArgoCD polls the repo)._
