@@ -50,9 +50,10 @@ charts/modelmatch/                 # umbrella = the ModelMatch product chart (re
   `/`. Probe `port:` references the named container port (`http`), not a hardcoded number.
 - **Container ports:** backend **8000** (gunicorn, non-root), frontend **8080** (nginx-unprivileged,
   uid 101). Services: backend `8000`, frontend `80` → targetPort `http`.
-- **NO secrets in values/ConfigMap — ever.** `JWT_SECRET`, `DATABASE_URL` (DB password), and the LLM-cap
-  secret arrive via **ESO → Secrets Manager (P12)**. ConfigMaps hold non-secret knobs only
-  (`BASELINE_MODEL_ID`, `QUALITY_THRESHOLD`, region/model knobs, `LLM_HOURLY_TOKEN_CAP`, `API_BASE_URL`).
+- **NO secrets in values/ConfigMap — ever.** `JWT_SECRET`, the DB password (→ `DATABASE_URL`, composed
+  at P14), and the chat read-only DB password (`CHAT_READONLY_DB_PASSWORD`) arrive via **ESO → Secrets
+  Manager (P12)**. ConfigMaps hold non-secret knobs only (`BASELINE_MODEL_ID`, `QUALITY_THRESHOLD`,
+  region/model knobs, **`LLM_HOURLY_TOKEN_CAP` — a tuning knob, not a secret**, `API_BASE_URL`).
   `.gitignore` blocks `*-secret.yaml`/`secrets.yaml` as a backstop.
 - **`API_BASE_URL` is browser-facing** — it's the **public ingress host** (P15 sslip.io), *not* the
   in-cluster backend Service DNS, because the user's browser (not nginx) calls the backend.

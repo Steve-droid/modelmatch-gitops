@@ -1,0 +1,14 @@
+# P12 — app-secrets: the ESO wiring that pulls platform secrets from AWS Secrets
+# Manager into the `app` namespace. A deliberately tiny, standalone chart (NOT a
+# subchart of the modelmatch umbrella): the synced Secret must exist BEFORE the
+# umbrella's Postgres (P13) and backend (P14) land, so it deploys as its own
+# ArgoCD child app on its own lifecycle.
+#
+# It renders only two namespaced resources — a SecretStore (where ESO reads) and
+# an ExternalSecret (what ESO syncs, and into which K8s Secret). It contains NO
+# secret values; the values live solely in AWS Secrets Manager (`modelmatch/app`).
+apiVersion: v2
+name: app-secrets
+description: ESO SecretStore + ExternalSecret syncing modelmatch/app (AWS Secrets Manager) into the app namespace
+type: application
+version: 0.1.0

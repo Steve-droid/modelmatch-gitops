@@ -5,9 +5,11 @@
 #   backend:   maps onto the backend subchart's values.
 #   frontend:  maps onto the frontend subchart's values.
 #
-# NO SECRETS HERE. JWT_SECRET, DATABASE_URL (DB password), and the LLM-cap secret
-# arrive via ESO -> Secrets Manager in P12. Image tags are seeded from the ECR
-# :1.0.0 images; the CI Deploy stage (P17/P18) bumps the per-subchart `tag` field.
+# NO SECRETS HERE. JWT_SECRET, the DB password (-> DATABASE_URL, composed at P14), and
+# the chat read-only DB password arrive via ESO -> Secrets Manager in P12.
+# LLM_HOURLY_TOKEN_CAP is a non-secret tuning knob (it stays in the ConfigMap below).
+# Image tags are seeded from the ECR :1.0.0 images; the CI Deploy stage (P17/P18)
+# bumps the per-subchart `tag` field.
 
 global:
   # ECR registry (account 832285994273, ap-south-1). Shared by all subcharts.
