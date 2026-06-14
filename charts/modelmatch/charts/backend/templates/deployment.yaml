@@ -11,6 +11,11 @@ spec:
       {{- include "backend.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      annotations:
+        # Roll the pod when the ConfigMap content changes (e.g. the P15 sslip.io host ->
+        # PUBLIC_BASE_URL / CORS_ALLOW_ORIGINS) so the new env takes effect. Without this,
+        # an envFrom ConfigMap change does NOT restart the pod, leaving CORS/host stale.
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
       labels:
         {{- include "backend.labels" . | nindent 8 }}
     spec:
