@@ -25,7 +25,6 @@ global:
   # "0.0.0.0" is the not-yet-computed sentinel (renders a valid-but-dead host so
   # `helm lint`/`template` pass; it never routes — run the script before syncing).
   sslipIp: "35.154.192.87"
-
 # P15 — routing + TLS behind P11's ONE F5 nginx ELB. Host-based: app.<ip> -> frontend,
 # api.<ip> -> backend (backend stays at root, no rewrite). cert-manager issues the certs
 # via the cluster-issuer annotation.
@@ -61,7 +60,6 @@ ingress:
     service: modelmatch-backend
     port: 8000
     tlsSecretName: modelmatch-api-tls
-
 backend:
   enabled: true
   replicaCount: 1
@@ -103,7 +101,7 @@ backend:
     AWS_REGION: "ap-south-1"
     BEDROCK_MODEL_ID: "apac.amazon.nova-lite-v1:0"
     S3_BUCKET: "modelmatch-ingestion-sources"
-    LLM_CLIENT: "bedrock"            # in-cluster path uses Bedrock via IRSA (P14)
+    LLM_CLIENT: "bedrock" # in-cluster path uses Bedrock via IRSA (P14)
     LLM_HOURLY_TOKEN_CAP: "200000"
     # P15: PUBLIC_BASE_URL (api.<ip> host) + CORS_ALLOW_ORIGINS (app.<ip> origin) are
     # NOT literals here — the backend ConfigMap template derives them from
@@ -113,15 +111,14 @@ backend:
     DATABASE_URL: "postgresql+psycopg://modelmatch@modelmatch-postgres-rw:5432/modelmatch"
     # Chat read-only role NAME (non-secret) — must match the P13 migration's role.
     CHAT_READONLY_DB_USER: "modelmatch_chat_ro"
-
 frontend:
   enabled: true
   replicaCount: 1
   image:
     repository: modelmatch-frontend
-    tag: "1.0.0"
+    tag: "1.0.1"
     pullPolicy: IfNotPresent
-  containerPort: 8080              # nginx-unprivileged listens on 8080 (uid 101)
+  containerPort: 8080 # nginx-unprivileged listens on 8080 (uid 101)
   service:
     type: ClusterIP
     port: 80
@@ -133,7 +130,7 @@ frontend:
       cpu: 250m
       memory: 128Mi
   config: {}
-    # P15: API_BASE_URL is browser-facing (the user's browser, not nginx, calls the
-    # backend) = the PUBLIC api.<ip> host, NOT the in-cluster Service DNS. It is
-    # derived from global.sslipIp in the frontend ConfigMap template (single source
-    # of truth), so it is intentionally not a literal here.
+  # P15: API_BASE_URL is browser-facing (the user's browser, not nginx, calls the
+  # backend) = the PUBLIC api.<ip> host, NOT the in-cluster Service DNS. It is
+  # derived from global.sslipIp in the frontend ConfigMap template (single source
+  # of truth), so it is intentionally not a literal here.
