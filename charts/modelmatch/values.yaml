@@ -67,7 +67,7 @@ backend:
     repository: modelmatch-backend
     # 1.0.1 = the boto3-bearing image (built with --extra bedrock) so the in-cluster
     # Bedrock surface works; 1.0.0 had no boto3. FE stays 1.0.0 (unchanged).
-    tag: "1.0.1"
+    tag: "1.0.2"
     pullPolicy: IfNotPresent
   containerPort: 8000
   # IRSA (P14): the backend SA assumes role A (Bedrock + S3) — no static keys. The SA
