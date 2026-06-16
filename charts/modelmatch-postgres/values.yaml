@@ -9,7 +9,6 @@
 # Namespace everything lands in. `app` is Terraform-created (P10); this chart does
 # NOT create it (the ArgoCD child app has no CreateNamespace).
 namespace: app
-
 # ── The CloudNativePG Cluster ────────────────────────────────────────────────
 cluster:
   # Cluster name → CNPG derives the Services from it:
@@ -51,7 +50,6 @@ cluster:
   parameters:
     shared_buffers: 128MB
     max_connections: "100"
-
 # ── Storage: gp3 StorageClass (EBS CSI) + per-instance PVC ────────────────────
 # The default cluster `gp2` StorageClass uses the LEGACY in-tree provisioner
 # (kubernetes.io/aws-ebs), NOT the EBS CSI driver — so we author our own gp3 SC on
@@ -64,11 +62,9 @@ storageClass:
   # schema is recreated by the migrate hook and demo data is re-seeded each rebuild.
   # Pod-restart + Helm-redeploy survival (the actual requirement) still holds.
   reclaimPolicy: Delete
-
 storage:
   # Each CNPG instance gets one PVC of this size on the SC above.
   size: 5Gi
-
 # ── CNPG owner credential (basic-auth Secret, re-shaped from Secrets Manager) ──
 # CNPG's bootstrap.initdb.secret expects a kubernetes.io/basic-auth Secret
 # (username + password). Our P12 platform Secret is Opaque (POSTGRES_PASSWORD only),
@@ -81,24 +77,21 @@ appUserSecret:
   # The source JSON secret in AWS Secrets Manager.
   sourceSecretName: modelmatch/app
   refreshInterval: 1h
-
 # ── The migrate Job (alembic upgrade head, as a PostSync hook) ────────────────
 # Sources passwords from the P12 ESO-synced platform Secret. NEVER self-migrated by
 # the backend (the backend image's CMD is gunicorn-only; this Job is the schema step).
 appSecretName: modelmatch-app-secrets
-
 chat:
   # Non-secret read-only chat role name (matches the app default + the migration's
   # CHAT_READONLY_DB_USER). The role's password is the Secret CHAT_READONLY_DB_PASSWORD.
   readonlyUser: modelmatch_chat_ro
-
 migrate:
   image:
     # The backend image ships migrations/ + alembic.ini; the SAME image runs the
     # schema step (also used for the wait-for-db initContainer — one pull).
     registry: 832285994273.dkr.ecr.ap-south-1.amazonaws.com
     repository: modelmatch-backend
-    tag: "1.0.5"
+    tag: "1.0.6"
     pullPolicy: IfNotPresent
   resources:
     requests:
