@@ -1,0 +1,250 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "schemaVersion": 39,
+  "tags": ["modelmatch", "llm", "cost"],
+  "title": "ModelMatch — LLM Signals (P22)",
+  "uid": "modelmatch-llm",
+  "time": { "from": "now-1h", "to": "now" },
+  "refresh": "30s",
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "label": "Data source",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {},
+        "hide": 0,
+        "refresh": 1,
+        "regex": ""
+      },
+      { "name": "price_nova_in",    "type": "constant", "label": "Nova Lite $/Mtok in",   "query": "0.06", "current": { "value": "0.06", "text": "0.06" }, "hide": 2 },
+      { "name": "price_nova_out",   "type": "constant", "label": "Nova Lite $/Mtok out",  "query": "0.24", "current": { "value": "0.24", "text": "0.24" }, "hide": 2 },
+      { "name": "price_haiku_in",   "type": "constant", "label": "Haiku 4.5 $/Mtok in",   "query": "0.80", "current": { "value": "0.80", "text": "0.80" }, "hide": 2 },
+      { "name": "price_haiku_out",  "type": "constant", "label": "Haiku 4.5 $/Mtok out",  "query": "4.00", "current": { "value": "4.00", "text": "4.00" }, "hide": 2 },
+      { "name": "price_sonnet_in",  "type": "constant", "label": "Sonnet 4.5 $/Mtok in",  "query": "3.00", "current": { "value": "3.00", "text": "3.00" }, "hide": 2 },
+      { "name": "price_sonnet_out", "type": "constant", "label": "Sonnet 4.5 $/Mtok out", "query": "15.00", "current": { "value": "15.00", "text": "15.00" }, "hide": 2 }
+    ]
+  },
+  "panels": [
+    {
+      "id": 100, "type": "row", "title": "Tokens (by model + endpoint)", "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "panels": []
+    },
+    {
+      "id": 1, "type": "timeseries", "title": "Input (prompt) token rate — by model + purpose",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "tps", "decimals": 2, "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "max"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum by (model, purpose) (rate(modelmatch_llm_tokens_in_total[5m]))", "legendFormat": "{{model}} · {{purpose}}" }
+      ]
+    },
+    {
+      "id": 2, "type": "timeseries", "title": "Output (completion) token rate — by model + purpose",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "tps", "decimals": 2, "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "max"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum by (model, purpose) (rate(modelmatch_llm_tokens_out_total[5m]))", "legendFormat": "{{model}} · {{purpose}}" }
+      ]
+    },
+    {
+      "id": 3, "type": "stat", "title": "Input tokens (last 1h)",
+      "gridPos": { "h": 4, "w": 12, "x": 0, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null } ] } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(increase(modelmatch_llm_tokens_in_total[1h]))" }
+      ]
+    },
+    {
+      "id": 4, "type": "stat", "title": "Output tokens (last 1h)",
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 9 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null } ] } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(increase(modelmatch_llm_tokens_out_total[1h]))" }
+      ]
+    },
+    {
+      "id": 101, "type": "row", "title": "Latency", "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 }, "panels": []
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "LLM call latency p50 / p95 — by model + purpose",
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 2, "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "max"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "histogram_quantile(0.50, sum by (le, model, purpose) (rate(modelmatch_llm_latency_seconds_bucket[5m])))", "legendFormat": "p50 · {{model}} · {{purpose}}" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "histogram_quantile(0.95, sum by (le, model, purpose) (rate(modelmatch_llm_latency_seconds_bucket[5m])))", "legendFormat": "p95 · {{model}} · {{purpose}}" }
+      ]
+    },
+    {
+      "id": 6, "type": "stat", "title": "Avg LLM latency (5m, all calls)",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s", "decimals": 2,
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 5 },
+            { "color": "red", "value": 15 }
+          ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate(modelmatch_llm_latency_seconds_sum[5m])) / sum(rate(modelmatch_llm_latency_seconds_count[5m]))" }
+      ]
+    },
+    {
+      "id": 102, "type": "row", "title": "Errors & throttling", "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 }, "panels": []
+    },
+    {
+      "id": 7, "type": "stat", "title": "Throttled calls (last 1h)",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 23 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short", "decimals": 0,
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 1 },
+            { "color": "red", "value": 10 }
+          ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(increase(modelmatch_llm_calls_total{status=\"throttled\"}[1h])) or vector(0)" }
+      ]
+    },
+    {
+      "id": 8, "type": "stat", "title": "Errored calls (last 1h)",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 23 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short", "decimals": 0,
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": null },
+            { "color": "red", "value": 1 }
+          ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(increase(modelmatch_llm_calls_total{status=\"error\"}[1h])) or vector(0)" }
+      ]
+    },
+    {
+      "id": 9, "type": "timeseries", "title": "Error + throttle share — by model + purpose",
+      "gridPos": { "h": 5, "w": 12, "x": 12, "y": 23 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "decimals": 1, "min": 0, "max": 1, "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "max"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum by (model, purpose) (rate(modelmatch_llm_calls_total{status=~\"error|throttled\"}[5m])) / clamp_min(sum by (model, purpose) (rate(modelmatch_llm_calls_total[5m])), 1e-9)", "legendFormat": "{{model}} · {{purpose}}" }
+      ]
+    },
+    {
+      "id": 10, "type": "table", "title": "Calls by model · purpose · status (cumulative)",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "status" }, "properties": [ { "id": "mappings", "value": [
+            { "type": "value", "options": { "ok": { "color": "green", "index": 0 }, "throttled": { "color": "yellow", "index": 1 }, "error": { "color": "red", "index": 2 } } }
+          ] }, { "id": "custom.cellOptions", "value": { "type": "color-text" } } ] }
+        ]
+      },
+      "options": { "showHeader": true, "sortBy": [ { "displayName": "calls", "desc": true } ] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum by (model, purpose, status) (modelmatch_llm_calls_total)", "format": "table", "instant": true }
+      ],
+      "transformations": [
+        { "id": "organize", "options": {
+          "excludeByName": { "Time": true, "__name__": true, "job": true, "service": true, "instance": true, "endpoint": true, "container": true, "namespace": true, "pod": true, "uid": true },
+          "indexByName": { "model": 0, "purpose": 1, "status": 2, "Value": 3 },
+          "renameByName": { "Value": "calls", "purpose": "purpose (endpoint)" }
+        } }
+      ]
+    },
+    {
+      "id": 103, "type": "row", "title": "Cost — tokens × $/Mtok rate, computed in Grafana (no $ metric stored)", "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 36 }, "panels": []
+    },
+    {
+      "id": 11, "type": "text", "title": "Rate card ($/Mtok)",
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 37 },
+      "options": { "mode": "markdown", "content": "**Per-model pricing** (configmap rate, baked into this dashboard JSON as dashboard template constants — **never** a stored `$` metric):\n\n| Model | in | out |\n|---|---|---|\n| Nova Lite | $0.06 | $0.24 |\n| Haiku 4.5 | $0.80 | $4.00 |\n| Sonnet 4.5 | $3.00 | $15.00 |\n\nCost = (tokens_in ÷ 1e6 × rate_in) + (tokens_out ÷ 1e6 × rate_out), evaluated by Grafana. Edit the `price_*` dashboard variables to retune." }
+    },
+    {
+      "id": 12, "type": "timeseries", "title": "Cumulative estimated cost — by model",
+      "gridPos": { "h": 7, "w": 16, "x": 8, "y": 37 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD", "decimals": 4, "custom": { "drawStyle": "line", "fillOpacity": 10, "stacking": { "mode": "normal" } } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "(sum(modelmatch_llm_tokens_in_total{model=\"apac.amazon.nova-lite-v1:0\"}) or vector(0)) / 1e6 * $price_nova_in + (sum(modelmatch_llm_tokens_out_total{model=\"apac.amazon.nova-lite-v1:0\"}) or vector(0)) / 1e6 * $price_nova_out", "legendFormat": "Nova Lite" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "(sum(modelmatch_llm_tokens_in_total{model=\"Claude Haiku 4.5\"}) or vector(0)) / 1e6 * $price_haiku_in + (sum(modelmatch_llm_tokens_out_total{model=\"Claude Haiku 4.5\"}) or vector(0)) / 1e6 * $price_haiku_out", "legendFormat": "Haiku 4.5" },
+        { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "(sum(modelmatch_llm_tokens_in_total{model=\"Claude Sonnet 4.5\"}) or vector(0)) / 1e6 * $price_sonnet_in + (sum(modelmatch_llm_tokens_out_total{model=\"Claude Sonnet 4.5\"}) or vector(0)) / 1e6 * $price_sonnet_out", "legendFormat": "Sonnet 4.5" }
+      ]
+    },
+    {
+      "id": 13, "type": "stat", "title": "Total estimated LLM cost (all models)",
+      "gridPos": { "h": 5, "w": 8, "x": 0, "y": 44 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD", "decimals": 4, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "(sum(modelmatch_llm_tokens_in_total{model=\"apac.amazon.nova-lite-v1:0\"}) or vector(0)) / 1e6 * $price_nova_in + (sum(modelmatch_llm_tokens_out_total{model=\"apac.amazon.nova-lite-v1:0\"}) or vector(0)) / 1e6 * $price_nova_out + (sum(modelmatch_llm_tokens_in_total{model=\"Claude Haiku 4.5\"}) or vector(0)) / 1e6 * $price_haiku_in + (sum(modelmatch_llm_tokens_out_total{model=\"Claude Haiku 4.5\"}) or vector(0)) / 1e6 * $price_haiku_out + (sum(modelmatch_llm_tokens_in_total{model=\"Claude Sonnet 4.5\"}) or vector(0)) / 1e6 * $price_sonnet_in + (sum(modelmatch_llm_tokens_out_total{model=\"Claude Sonnet 4.5\"}) or vector(0)) / 1e6 * $price_sonnet_out" }
+      ]
+    },
+    {
+      "id": 14, "type": "bargauge", "title": "Estimated cost by model",
+      "gridPos": { "h": 5, "w": 16, "x": 8, "y": 44 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD", "decimals": 4, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "options": { "displayMode": "gradient", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "(sum(modelmatch_llm_tokens_in_total{model=\"apac.amazon.nova-lite-v1:0\"}) or vector(0)) / 1e6 * $price_nova_in + (sum(modelmatch_llm_tokens_out_total{model=\"apac.amazon.nova-lite-v1:0\"}) or vector(0)) / 1e6 * $price_nova_out", "legendFormat": "Nova Lite", "instant": true },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "(sum(modelmatch_llm_tokens_in_total{model=\"Claude Haiku 4.5\"}) or vector(0)) / 1e6 * $price_haiku_in + (sum(modelmatch_llm_tokens_out_total{model=\"Claude Haiku 4.5\"}) or vector(0)) / 1e6 * $price_haiku_out", "legendFormat": "Haiku 4.5", "instant": true },
+        { "refId": "C", "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "(sum(modelmatch_llm_tokens_in_total{model=\"Claude Sonnet 4.5\"}) or vector(0)) / 1e6 * $price_sonnet_in + (sum(modelmatch_llm_tokens_out_total{model=\"Claude Sonnet 4.5\"}) or vector(0)) / 1e6 * $price_sonnet_out", "legendFormat": "Sonnet 4.5", "instant": true }
+      ]
+    }
+  ]
+}
