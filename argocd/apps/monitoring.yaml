@@ -51,11 +51,13 @@ spec:
           resources:
             requests: { cpu: 50m,  memory: 128Mi }
             limits:   { cpu: 200m, memory: 256Mi }
+          # Disable the operator's admission webhook (PrometheusRule validation) and its PreSync
+          # cert-gen Jobs. Those Jobs run as ArgoCD PreSync hooks and repeatedly wedged the sync in
+          # its PreSync phase, so it never reached the Sync phase that applies Grafana/Prometheus.
+          # The operator runs fine without the webhook; dropping it also removes 2 hook pods —
+          # leaner per Roey's "install only what you need".
           admissionWebhooks:
-            patch:
-              resources:
-                requests: { cpu: 25m,  memory: 32Mi }
-                limits:   { cpu: 100m, memory: 128Mi }
+            enabled: false
           # The config-reloader runs as BOTH an init container and a sidecar in every
           # Prometheus pod — the chart defaults it to {} (uncapped), so cap it here to
           # honour the "requests/limits on every container" rule.
