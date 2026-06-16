@@ -93,6 +93,26 @@ spec:
                 - port: http              # the backend Service's named 8000 port
                   path: /metrics
                   interval: 30s
+          # P21 — scrape the ArgoCD application-controller's own metrics so the
+          # Infra/DevOps dashboard's sync/health panels (argocd_app_info) have data.
+          # The lean argo-cd install ships NO *-metrics Service, so a ServiceMonitor
+          # would have nothing to select; the controller POD exposes a named `metrics`
+          # port (8082) directly, so we use a PodMonitor instead. Operator-owned
+          # (declared here, sibling of the SM above) → no CRD-before-CR race, and no
+          # change to platform/argocd.tf (which would hit the CRD-ordering trap and
+          # need a terraform apply). podMonitorSelectorNilUsesHelmValues:false (above)
+          # lets the operator discover it regardless of a Helm release label.
+          additionalPodMonitors:
+            - name: argocd-application-controller
+              namespaceSelector:
+                matchNames: [argocd]
+              selector:
+                matchLabels:
+                  app.kubernetes.io/name: argocd-application-controller
+              podMetricsEndpoints:
+                - port: metrics           # the controller pod's named 8082 port
+                  path: /metrics
+                  interval: 30s
 
         grafana:
           # admin user defaults to "admin"; the password is the chart default and is NOT
