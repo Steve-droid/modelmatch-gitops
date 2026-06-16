@@ -1,0 +1,54 @@
+# P23 — the EFK data plane (Elasticsearch + Kibana CRs + ILM bootstrap) as a child app.
+#
+# Renders the in-repo charts/logging chart: the single-node Elasticsearch CR (emptyDir,
+# bounded heap/resources, HTTP TLS off), the associated Kibana CR, and the ILM retention
+# bootstrap Job (PostSync hook: delete @ 3 days). Fluent Bit ships logs IN via its own
+# child app (logging-fluent-bit, wave 2).
+#
+# Ordered after the operator: sync-wave "1" — after the eck-operator app (wave "-1")
+# installs the elastic.co CRDs the Elasticsearch/Kibana CRs depend on.
+#
+# NO CreateNamespace: `logging` is Terraform-owned (P10) — single owner.
+#
+# DAY-END ORPHAN NOTE: emptyDir means NO PVC/EBS volume to clean (unlike Postgres) — the
+# only thing this app creates is in-cluster ES/Kibana pods + Services. Nothing extra to
+# delete before a platform destroy.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: logging
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Steve-droid/modelmatch-gitops.git
+    targetRevision: main
+    path: charts/logging
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: logging
+  # The ECK operator defaults many CR spec fields + continuously writes .status; ignore
+  # those so selfHeal doesn't fight the operator (same idiom as the CNPG Cluster).
+  ignoreDifferences:
+    - group: elasticsearch.k8s.elastic.co
+      kind: Elasticsearch
+      name: modelmatch
+      namespace: logging
+      jsonPointers:
+        - /status
+    - group: kibana.k8s.elastic.co
+      kind: Kibana
+      name: modelmatch
+      namespace: logging
+      jsonPointers:
+        - /status
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - RespectIgnoreDifferences=true

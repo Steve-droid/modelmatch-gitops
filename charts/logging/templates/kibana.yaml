@@ -1,0 +1,36 @@
+# Kibana CR — the UI for querying the shipped logs in Elasticsearch.
+#
+# `elasticsearchRef` makes the ECK operator AUTO-WIRE the association: it creates a
+# dedicated Kibana<->ES service account, injects the ES URL + credentials, and (since
+# HTTP TLS is disabled on the ES side) connects over plain http. No credential here.
+#
+# Access for the demo is via `kubectl port-forward` (same as Grafana in P20) — no
+# ingress host. Kibana's own HTTP TLS is disabled so the port-forward is plain http.
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: {{ .Values.kibana.name }}
+  namespace: {{ .Values.namespace }}
+  annotations:
+    # Kibana CRD also comes from the eck-operator app — same dry-run skip as the ES CR.
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  version: {{ .Values.stackVersion | quote }}
+  count: {{ .Values.kibana.count }}
+  elasticsearchRef:
+    name: {{ .Values.elasticsearch.name }}
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
+  podTemplate:
+    spec:
+      containers:
+        - name: kibana
+          resources:
+            requests:
+              cpu: {{ .Values.kibana.resources.requests.cpu | quote }}
+              memory: {{ .Values.kibana.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.kibana.resources.limits.cpu | quote }}
+              memory: {{ .Values.kibana.resources.limits.memory | quote }}

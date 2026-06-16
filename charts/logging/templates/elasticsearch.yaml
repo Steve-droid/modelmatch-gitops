@@ -1,0 +1,60 @@
+# Elasticsearch CR — the single-node ES the ECK operator reconciles into a StatefulSet.
+#
+# The eck-operator child app (sync-wave -1) installs the elasticsearch.k8s.elastic.co
+# CRD + the operator; this CR (sync-wave 1) is reconciled into:
+#   - the ES pod (1 node: master+data+ingest),
+#   - Service `<name>-es-http` (HTTP API on 9200),
+#   - Secret `<name>-es-elastic-user` (the GENERATED `elastic` superuser password).
+#
+# SINGLE NODE + emptyDir: logs are rebuildable, so no PVC (no EBS orphan at destroy);
+# ILM (ilm-bootstrap-job.yaml) caps index growth. HTTP TLS is disabled to keep the
+# in-cluster wiring simple (Fluent Bit + the ILM Job + Kibana all reach ES over plain
+# http on the private cluster network); AUTHENTICATION stays on (elastic password
+# required), so this is "no transport encryption in-cluster", not "no auth".
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: {{ .Values.elasticsearch.name }}
+  namespace: {{ .Values.namespace }}
+  annotations:
+    # The CRD is installed by the eck-operator child app (sync-wave -1). On a fresh sync
+    # the CRD can be momentarily absent when this CR applies — skip the client dry-run so
+    # ArgoCD retries until it exists instead of hard-failing (same idiom as the CNPG Cluster).
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  version: {{ .Values.stackVersion | quote }}
+  # Disable self-signed HTTP TLS — see the header note (in-cluster, auth still required).
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
+  nodeSets:
+    - name: default
+      count: 1
+      config:
+        # Single-node discovery: this node is master-eligible and bootstraps alone.
+        node.roles: ["master", "data", "ingest"]
+        # niofs instead of mmapfs so we don't need vm.max_map_count=262144 on the node
+        # (which would require a privileged sysctl init container). Small perf cost,
+        # irrelevant at our log volume.
+        node.store.allow_mmap: false
+      podTemplate:
+        spec:
+          # emptyDir overrides ECK's default `elasticsearch-data` PVC (the documented
+          # recipe): same volume NAME, backed by emptyDir → no PersistentVolume created.
+          volumes:
+            - name: elasticsearch-data
+              emptyDir:
+                sizeLimit: {{ .Values.elasticsearch.storage.emptyDir.sizeLimit | quote }}
+          containers:
+            - name: elasticsearch
+              env:
+                - name: ES_JAVA_OPTS
+                  value: "-Xms{{ .Values.elasticsearch.heap }} -Xmx{{ .Values.elasticsearch.heap }}"
+              resources:
+                requests:
+                  cpu: {{ .Values.elasticsearch.resources.requests.cpu | quote }}
+                  memory: {{ .Values.elasticsearch.resources.requests.memory | quote }}
+                limits:
+                  cpu: {{ .Values.elasticsearch.resources.limits.cpu | quote }}
+                  memory: {{ .Values.elasticsearch.resources.limits.memory | quote }}

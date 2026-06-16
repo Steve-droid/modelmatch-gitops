@@ -1,0 +1,25 @@
+# logging — the EFK data plane for ModelMatch (P23, E13 Observability).
+#
+# A tiny standalone chart (its own ArgoCD child app), deliberately NOT an umbrella
+# subchart: Elasticsearch/Kibana are cluster-platform concerns (managed by the ECK
+# operator), not the app-namespaced product chart. Mirrors the repo idiom — each
+# cross-cutting concern (cnpg-operator + modelmatch-postgres, cert-manager +
+# cluster-issuers, ...) is its own child app.
+#
+# Renders the ECK custom resources + the retention bootstrap:
+#   - Elasticsearch CR (single-node, emptyDir, bounded heap/resources, HTTP TLS off)
+#   - Kibana CR (1 replica, associated to the ES above)
+#   - an ILM bootstrap Job (PostSync hook): the modelmatch-logs ILM policy (delete @ 3d)
+#     + the matching index template, applied to the Fluent Bit indices.
+#
+# Depends on the ECK CRDs installed by the eck-operator child app (logging-operator).
+apiVersion: v2
+name: logging
+description: >-
+  ModelMatch EFK data plane — ECK Elasticsearch (single-node, emptyDir) + Kibana CRs,
+  plus the ILM retention bootstrap (delete @ 3 days). Fluent Bit ships logs in (own app).
+type: application
+# Chart version — bumped per chart change (independent of the gitops repo SemVer tag).
+version: 0.1.0
+# The Elastic Stack version the CRs deploy (ES + Kibana operand image tag).
+appVersion: "8.18.0"
