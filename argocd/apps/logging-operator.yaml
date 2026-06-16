@@ -1,0 +1,56 @@
+# P23 — ECK (Elastic Cloud on Kubernetes) operator as an ArgoCD child app (E13).
+#
+# Installs the elastic.co CRDs (Elasticsearch, Kibana, ...) + the operator that
+# reconciles them. It MUST be present before the `logging` child app applies its
+# Elasticsearch/Kibana CRs — sync-wave "-1" makes the root app reconcile this first
+# (and those CRs carry SkipDryRunOnMissingResource as a belt-and-suspenders for the
+# brief window before the CRDs register). Same idiom as cnpg-operator (P13).
+#
+# Upstream Helm chart over its public HTTPS repo — anonymous read, no credentials in
+# Git/ArgoCD (the Roey "no third-party modules" rule is Terraform-only; upstream Helm
+# charts via ArgoCD are fine, as with monitoring/cnpg/cert-manager).
+#
+# Runs in the `logging` namespace (Terraform-owned, P10) → no CreateNamespace. The
+# operator watches ALL namespaces by default, which is all we need (CRs live in logging).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: logging-operator
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://helm.elastic.co
+    chart: eck-operator
+    targetRevision: 3.4.0 # ECK operator v3.4.0 — pinned (latest stable as of 2026-06-17)
+    helm:
+      releaseName: eck-operator
+      values: |
+        # Disable the ECK admission webhook (+ its cert Secret/Service): it validates ECK
+        # CRs, but a not-yet-ready operator can block CR creation and wedge the sync —
+        # same failure mode + fix as the P20 monitoring app's prometheus admissionWebhooks.
+        # The operator reconciles our CRs fine without it; one fewer moving part to race.
+        webhook:
+          enabled: false
+        # Cap the operator container (repo rule: limits on every container; the chart's
+        # default memory limit is 1Gi — trim it, we manage just 1 ES + 1 Kibana).
+        resources:
+          requests:
+            cpu: 100m
+            memory: 150Mi
+          limits:
+            cpu: "1"
+            memory: 512Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: logging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true # large CRDs — avoid the client-side annotation-size limit

@@ -1,0 +1,109 @@
+# P23 — Fluent Bit (the "F" in EFK) as an ArgoCD child app (E13).
+#
+# A DaemonSet that tails container stdout on each node and ships it to the Elasticsearch
+# from the `logging` app. SCOPED TO THE `app` NAMESPACE ONLY (the tail Path glob matches
+# the containerd filename pattern `<pod>_<namespace>_<container>-<id>.log`) — the
+# per-request `llm_call` line lives in `app`, and a single-node ES stays honest on the
+# smallest log volume.
+#
+# The kubernetes filter's `Merge_Log On` parses each JSON stdout line (our llm_call
+# record is `json.dumps(...)`) and merges its keys to the record top level, so Kibana can
+# query `event:llm_call` filtered by `model` / `purpose`. Non-JSON lines (gunicorn text)
+# pass through untouched.
+#
+# Ordered after Elasticsearch: sync-wave "2". The ES `elastic` password is read by ref
+# from the operator-generated Secret `modelmatch-es-elastic-user` — never in Git. If ES
+# isn't up yet the DaemonSet pods wait for the Secret (eventually consistent).
+#
+# Upstream Helm chart, public HTTPS repo (anonymous). `logging` ns is Terraform-owned →
+# no CreateNamespace.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: logging-fluent-bit
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://fluent.github.io/helm-charts
+    chart: fluent-bit
+    targetRevision: 0.57.7 # Fluent Bit app v5.0.7 — pinned (latest stable as of 2026-06-17)
+    helm:
+      releaseName: fluent-bit
+      values: |
+        # Cap the DaemonSet container (repo rule: limits on every container).
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+        # The ES superuser password, read from the ECK-generated Secret (logging ns).
+        env:
+          - name: ES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: modelmatch-es-elastic-user
+                key: elastic
+        config:
+          service: |
+            [SERVICE]
+                Daemon Off
+                Flush 5
+                Log_Level info
+                Parsers_File /fluent-bit/etc/parsers.conf
+                HTTP_Server On
+                HTTP_Listen 0.0.0.0
+                HTTP_Port 2020
+                Health_Check On
+          # Tail ONLY the `app` namespace (filename pattern *_app_*.log). The cri
+          # multiline parser strips the containerd `<time> stdout F ` prefix, leaving the
+          # app's raw stdout line in the `log` field.
+          inputs: |
+            [INPUT]
+                Name tail
+                Tag kube.app.*
+                Path /var/log/containers/*_app_*.log
+                multiline.parser cri
+                Mem_Buf_Limit 16MB
+                Skip_Long_Lines On
+                Refresh_Interval 10
+          # Enrich with pod metadata, then JSON-parse the `log` field (Merge_Log On) so
+          # llm_call fields (event/purpose/model/tokens_*/...) become top-level + queryable.
+          filters: |
+            [FILTER]
+                Name kubernetes
+                Match kube.app.*
+                Merge_Log On
+                Keep_Log Off
+                K8S-Logging.Parser On
+                K8S-Logging.Exclude On
+          # Ship to the single-node ES over plain http (ES HTTP TLS disabled), authed as
+          # the elastic user. Daily indices modelmatch-logs-YYYY.MM.DD — matched by the
+          # ILM index template (charts/logging) which sets 0 replicas + delete @ 3d.
+          outputs: |
+            [OUTPUT]
+                Name es
+                Match kube.app.*
+                Host modelmatch-es-http
+                Port 9200
+                HTTP_User elastic
+                HTTP_Passwd ${ES_PASSWORD}
+                Suppress_Type_Name On
+                Logstash_Format On
+                Logstash_Prefix modelmatch-logs
+                Replace_Dots On
+                Retry_Limit False
+                tls Off
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: logging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
