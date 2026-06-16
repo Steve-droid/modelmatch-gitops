@@ -1,0 +1,35 @@
+# P20 — ModelMatch Grafana app dashboard (in-repo chart) as an ArgoCD child app (E13).
+#
+# Ships the application dashboard as a labelled ConfigMap (grafana_dashboard=1) that the
+# kube-prometheus-stack Grafana sidecar imports — dashboards-as-code, so the panels
+# survive a Grafana restart/redeploy (nothing click-opped). Panels: HTTP request rate,
+# p50/p95 latency, 5xx error rate, and DB query timing — all off the backend /metrics.
+#
+# Separate from the `monitoring` app on purpose: this carries ONLY plain ConfigMaps (no
+# CRD dependency), so it can't hit the ServiceMonitor-CRD ordering race. sync-wave "1"
+# keeps it tidy (after the stack) but it would reconcile fine in any order — the sidecar
+# picks the ConfigMap up whenever Grafana is up.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-dashboards
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Steve-droid/modelmatch-gitops.git
+    targetRevision: main
+    path: charts/monitoring
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true # tolerate either ordering vs the monitoring app
