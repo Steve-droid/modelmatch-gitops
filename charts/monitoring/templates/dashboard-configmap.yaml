@@ -1,0 +1,18 @@
+# One ConfigMap per dashboard JSON under dashboards/. The kube-prometheus-stack Grafana
+# sidecar watches for the `grafana_dashboard` label cluster-wide and imports each entry,
+# so the dashboard is provisioned as code and survives a Grafana pod/redeploy.
+{{- range $path, $_ := .Files.Glob "dashboards/*.json" }}
+{{- $name := base $path | trimSuffix ".json" }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: modelmatch-dashboard-{{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{ $.Values.dashboardLabel }}: {{ $.Values.dashboardLabelValue | quote }}
+    app.kubernetes.io/part-of: modelmatch
+data:
+  {{ base $path }}: |-
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}

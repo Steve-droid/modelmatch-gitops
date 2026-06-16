@@ -1,0 +1,4 @@
+# The Grafana sidecar (from kube-prometheus-stack) discovers dashboard ConfigMaps by
+# this label cluster-wide (searchNamespace: ALL). The stack's default labelValue is "1".
+dashboardLabel: grafana_dashboard
+dashboardLabelValue: "1"
