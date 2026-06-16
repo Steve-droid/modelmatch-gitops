@@ -104,11 +104,13 @@ spec:
             requests: { cpu: 50m,  memory: 128Mi }
             limits:   { cpu: 200m, memory: 256Mi }
           # The dashboard + datasource sidecar containers only get resources when
-          # grafana.sidecar.resources is set (chart defaults them to {}). Cap them too.
+          # grafana.sidecar.resources is set (chart defaults them to {}). Cap them —
+          # but the k8s-sidecar watches ConfigMaps cluster-wide, so 64Mi OOMKilled it
+          # (exitCode 137, CrashLoopBackOff); 128Mi is the headroom it needs.
           sidecar:
             resources:
-              requests: { cpu: 10m, memory: 32Mi }
-              limits:   { cpu: 50m, memory: 64Mi }
+              requests: { cpu: 10m, memory: 64Mi }
+              limits:   { cpu: 50m, memory: 128Mi }
 
         kube-state-metrics:
           resources:
@@ -122,6 +124,18 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
+  # The Grafana chart generates a RANDOM admin password whenever grafana.adminPassword
+  # is unset (we don't set it — no secret in git). Each render produces a new value, so
+  # the Secret's data diffs on every reconcile → the app is permanently OutOfSync and
+  # selfHeal retries forever. Ignore the Secret's data so the password stays as first
+  # generated (read it live for the port-forward demo); everything else still syncs.
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: kube-prometheus-stack-grafana
+      namespace: monitoring
+      jsonPointers:
+        - /data
   syncPolicy:
     automated:
       prune: true
