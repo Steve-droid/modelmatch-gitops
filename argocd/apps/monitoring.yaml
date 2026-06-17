@@ -58,6 +58,14 @@ spec:
           # leaner per Roey's "install only what you need".
           admissionWebhooks:
             enabled: false
+          # Disabling admissionWebhooks removes the cert-gen Job that creates the
+          # kube-prometheus-stack-admission secret — but prometheusOperator.tls.enabled
+          # defaults true, so the operator still mounts that (now-nonexistent) secret and
+          # hangs in ContainerCreating on a FRESH cluster (it only worked before when a
+          # leftover secret survived in a long-lived cluster). No webhook => the operator
+          # needs no HTTPS-serving cert, so turn its TLS off too.
+          tls:
+            enabled: false
           # The config-reloader runs as BOTH an init container and a sidecar in every
           # Prometheus pod — the chart defaults it to {} (uncapped), so cap it here to
           # honour the "requests/limits on every container" rule.
