@@ -91,7 +91,7 @@ migrate:
     # schema step (also used for the wait-for-db initContainer — one pull).
     registry: 832285994273.dkr.ecr.ap-south-1.amazonaws.com
     repository: modelmatch-backend
-    tag: "1.0.9"
+    tag: "1.0.10"
     pullPolicy: IfNotPresent
   resources:
     requests:
