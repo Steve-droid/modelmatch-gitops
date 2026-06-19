@@ -1,0 +1,68 @@
+{{- $img := printf "%s/%s:%s" .Values.migrate.image.registry .Values.migrate.image.repository .Values.migrate.image.tag -}}
+# Catalog auto-seed Job (P30) — `python -m app.catalog.seed`, an ArgoCD PostSync HOOK.
+#
+# WHY here + WHY this order: the catalog is reference data the recommender ranks over,
+# so it must exist after every sync. It is idempotent by construction (load_seed
+# upserts per natural key) and deterministic — NO LLM, zero tokens.
+#
+# Ordering: ArgoCD runs PostSync hooks in hook-weight order and waits for each to
+# COMPLETE before the next weight. The migrate Job (no weight = 0) creates the schema
+# first; this hook (weight 10) runs after it, so the tables exist and the DB is up —
+# no wait-for-db initContainer needed here. The demo Job (weight 20) runs after this.
+#
+# hook-delete-policy BeforeHookCreation: Jobs are immutable, so the prior Job is
+# deleted before each new sync recreates it (also keeps the last run for debugging).
+# Passwords come from the P12 ESO Secret; none are in Git. JWT_SECRET is required only
+# because importing app.config builds Settings (jwt_secret has no default).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.cluster.name }}-seed-catalog
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.cluster.name }}-seed-catalog
+    app.kubernetes.io/part-of: modelmatch
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 300
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.cluster.name }}-seed-catalog
+        app.kubernetes.io/part-of: modelmatch
+    spec:
+      restartPolicy: Never
+      securityContext:
+        # Backend image declares USER by NAME ("appuser", uid/gid 10001); runAsNonRoot
+        # can't verify a non-numeric user, so pin the uid (as the migrate Job does).
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+      containers:
+        - name: seed-catalog
+          image: {{ $img | quote }}
+          imagePullPolicy: {{ .Values.migrate.image.pullPolicy }}
+          command: ["python", "-m", "app.catalog.seed"]
+          env:
+            # Passwordless DSN (URL-reserved chars in the password can't break parsing);
+            # libpq reads PGPASSWORD at connect time. Host = the CNPG primary Service.
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.appSecretName }}
+                  key: POSTGRES_PASSWORD
+            - name: DATABASE_URL
+              value: postgresql+psycopg://{{ .Values.cluster.owner }}@{{ .Values.cluster.name }}-rw:5432/{{ .Values.cluster.database }}
+            # Required only so app.config.get_settings() can build Settings (jwt_secret
+            # has no default). Not otherwise used; LLM_CLIENT stays unset (fake).
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.appSecretName }}
+                  key: JWT_SECRET
+          resources:
+            {{- toYaml .Values.migrate.resources | nindent 12 }}

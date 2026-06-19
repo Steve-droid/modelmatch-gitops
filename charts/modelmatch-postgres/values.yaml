@@ -88,7 +88,9 @@ chat:
 migrate:
   image:
     # The backend image ships migrations/ + alembic.ini; the SAME image runs the
-    # schema step (also used for the wait-for-db initContainer — one pull).
+    # schema step (also used for the wait-for-db initContainer — one pull). The seed
+    # Jobs (P30) reuse this image + resources — the backend image ships their
+    # `app.catalog.seed` / `app.demo.seed` entrypoints, so one tag bump covers all.
     registry: 832285994273.dkr.ecr.ap-south-1.amazonaws.com
     repository: modelmatch-backend
     tag: "1.0.10"
@@ -100,3 +102,19 @@ migrate:
     limits:
       cpu: 500m
       memory: 512Mi
+# ── Auto-seed Jobs (P30, PostSync hooks AFTER migrate) ────────────────────────
+# Two-tier, both deterministic / zero-token:
+#   • Catalog (sync-wave 10, ALWAYS) — reference rows the recommender ranks over;
+#     idempotent upsert. Rendered unconditionally.
+#   • Demo dataset (sync-wave 20, GATED by `demo`) — a demo user + project + a spread
+#     of CI runs so a fresh bring-up shows a populated dashboard with no manual steps.
+# A non-demo env sets `demo: false` and ships zero fixtures. The demo user's LOGIN
+# password is NOT here — it arrives via ESO (DEMO_SEED_PASSWORD in the app Secret).
+seed:
+  # ON for this portfolio/demo env. The only knob that turns the demo dataset off.
+  demo: true
+  # Non-secret demo identifiers. The email is a login id (already public via the LE
+  # issuer contact), not a credential; project name + run count shape the dashboard.
+  email: stevelevit230@gmail.com
+  projectName: demo-api
+  runCount: 30

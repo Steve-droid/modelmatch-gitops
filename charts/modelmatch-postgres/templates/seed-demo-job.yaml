@@ -1,0 +1,85 @@
+{{- if .Values.seed.demo }}
+{{- $img := printf "%s/%s:%s" .Values.migrate.image.registry .Values.migrate.image.repository .Values.migrate.image.tag -}}
+# Demo dataset auto-seed Job (P30) — `python -m app.demo.seed`, a gated ArgoCD PostSync
+# HOOK. Rendered ONLY when seed.demo is true (demo/portfolio env) — a real env leaves it
+# off and ships zero demo fixtures.
+#
+# Creates the demo user + a project from a REAL deterministic recommendation + a spread
+# of CI runs, so a fresh bring-up shows a populated dashboard with no manual steps.
+# SKIP-IF-PRESENT: this hook re-fires on every backend deploy (the release bumps this
+# chart's migrate image tag, re-syncing the app), so the module no-ops once the demo
+# project already has runs — a one-time bootstrap per fresh DB, never a per-deploy reset
+# that would wipe live demo activity. Deterministic — NO LLM, zero tokens. Runs at
+# sync-wave 20: AFTER migrate (0, schema) and the catalog seed (10, the rows the
+# recommender ranks over), both of which ArgoCD completes first.
+#
+# The demo user's LOGIN password is the one secret here — it arrives via ESO
+# (DEMO_SEED_PASSWORD in the platform Secret), never Git. The email/project/run-count are
+# non-secret demo identifiers from values.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.cluster.name }}-seed-demo
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.cluster.name }}-seed-demo
+    app.kubernetes.io/part-of: modelmatch
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 300
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.cluster.name }}-seed-demo
+        app.kubernetes.io/part-of: modelmatch
+    spec:
+      restartPolicy: Never
+      securityContext:
+        # Backend image declares USER by NAME ("appuser", uid/gid 10001); runAsNonRoot
+        # can't verify a non-numeric user, so pin the uid (as the migrate Job does).
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+      containers:
+        - name: seed-demo
+          image: {{ $img | quote }}
+          imagePullPolicy: {{ .Values.migrate.image.pullPolicy }}
+          command: ["python", "-m", "app.demo.seed"]
+          env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.appSecretName }}
+                  key: POSTGRES_PASSWORD
+            - name: DATABASE_URL
+              value: postgresql+psycopg://{{ .Values.cluster.owner }}@{{ .Values.cluster.name }}-rw:5432/{{ .Values.cluster.database }}
+            # Required only so app.config.get_settings() can build Settings (jwt_secret
+            # has no default). LLM_CLIENT stays unset (fake) — the recommender is pure.
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.appSecretName }}
+                  key: JWT_SECRET
+            # Gate + demo dataset knobs. The flag is on here (this Job only renders when
+            # seed.demo is true); the module also refuses to seed unless it is set.
+            - name: DEMO_SEED
+              value: "1"
+            - name: DEMO_SEED_EMAIL
+              value: {{ .Values.seed.email | quote }}
+            - name: DEMO_SEED_PROJECT
+              value: {{ .Values.seed.projectName | quote }}
+            - name: DEMO_SEED_RUN_COUNT
+              value: {{ .Values.seed.runCount | quote }}
+            # The demo user's login password — the only secret, via ESO (never Git).
+            - name: DEMO_SEED_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.appSecretName }}
+                  key: DEMO_SEED_PASSWORD
+          resources:
+            {{- toYaml .Values.migrate.resources | nindent 12 }}
+{{- end }}
