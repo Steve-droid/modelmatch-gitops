@@ -32,7 +32,11 @@ refreshInterval: 1h
 #   JWT_SECRET                 - backend HS256 signing key (required, no default)
 #   POSTGRES_PASSWORD          - main DB credential; backend composes DATABASE_URL at P14
 #   CHAT_READONLY_DB_PASSWORD  - the read-only chat role's live credential (P13/P14)
+#   DEMO_SEED_PASSWORD         - the demo user's LOGIN password, used ONLY by the P30
+#                                demo-seed PostSync hook (gated by seed.demo) to create
+#                                the demo login. Demo credential, not production data.
 keys:
   - JWT_SECRET
   - POSTGRES_PASSWORD
   - CHAT_READONLY_DB_PASSWORD
+  - DEMO_SEED_PASSWORD
