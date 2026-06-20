@@ -24,7 +24,7 @@ global:
   # then commit so ArgoCD syncs and cert-manager (re)issues the cert. See README.
   # "0.0.0.0" is the not-yet-computed sentinel (renders a valid-but-dead host so
   # `helm lint`/`template` pass; it never routes — run the script before syncing).
-  sslipIp: "65.1.232.137"
+  sslipIp: "3.109.29.156"
 # P15 — routing + TLS behind P11's ONE F5 nginx ELB. Host-based: app.<ip> -> frontend,
 # api.<ip> -> backend (backend stays at root, no rewrite). cert-manager issues the certs
 # via the cluster-issuer annotation.
