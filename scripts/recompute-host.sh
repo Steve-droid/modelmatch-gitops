@@ -37,8 +37,9 @@ ELB_DNS="$(kubectl -n "$NS" get svc "$SVC" \
 echo "    ELB DNS : $ELB_DNS"
 
 echo "==> [read-only] resolving its current public IP (dig)"
-# A Classic ELB can publish multiple A records; pin the first (any is a valid entry
-# point to the LB). It can rotate over time, so re-run this on each rebuild.
+# The NLB publishes one static A record per AZ (2 here); pin the first (any is a valid
+# entry point to the LB). NLB IPs are stable for the life of the LB, but a platform
+# rebuild creates a brand-new LB with new IPs, so re-run this on each rebuild.
 IP="$(dig +short "$ELB_DNS" A | grep -E '^[0-9]+(\.[0-9]+){3}$' | sort | head -n1 || true)"
 [ -n "$IP" ] || { echo "ERROR: could not resolve an A record for $ELB_DNS (DNS not propagated yet?)"; exit 1; }
 echo "    IP      : $IP"
