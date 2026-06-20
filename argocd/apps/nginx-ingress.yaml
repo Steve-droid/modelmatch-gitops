@@ -7,8 +7,16 @@
 # Refs: https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/ ; https://github.com/nginx/kubernetes-ingress
 #
 # This is the cluster's SINGLE ingress LB: controller.service.type=LoadBalancer makes the EKS
-# cloud-controller-manager provision one Classic ELB. Routing/TLS (Ingress objects + ClusterIssuer) is
-# P15 — P11 only gets the controller Healthy. Keep it to ONE LB (cert-manager/ESO provision none).
+# cloud-controller-manager provision the LB. The `aws-load-balancer-type: nlb` annotation tells the
+# in-tree CCM to provision a Network Load Balancer (NLB) instead of the deprecated Classic ELB (CLB) it
+# defaults to — step 2 of the CLB → NLB → AWS Load Balancer Controller progression (see hld.md). Routing/
+# TLS (Ingress objects + ClusterIssuer) is P15 — P11 only gets the controller Healthy. Keep it to ONE LB
+# (cert-manager/ESO provision none).
+#
+# CUTOVER NOTE: the in-tree CCM cannot convert an existing CLB to an NLB in place. The first time this
+# annotation lands, the LoadBalancer Service must be deleted once so the CCM tears down the CLB and
+# recreates a fresh NLB (ArgoCD selfHeal recreates the Service with this annotation). The NLB gets a new
+# IP → re-run scripts/recompute-host.sh + push (sslip host) and cert-manager re-issues TLS.
 #
 # STANDARD INGRESS ONLY: enableCustomResources=false + skipCrds=true. We use plain Kubernetes `Ingress`
 # (path-based, P15), NOT F5's VirtualServer/TransportServer/Policy CRDs — so we don't install those CRDs
@@ -45,6 +53,9 @@ spec:
           enableCustomResources: false # standard K8s Ingress only — no F5 VirtualServer/TransportServer CRs
           service:
             type: LoadBalancer # the single ingress LB
+            annotations:
+              # In-tree CCM: provision a Network Load Balancer (L4), not the deprecated Classic ELB.
+              service.beta.kubernetes.io/aws-load-balancer-type: nlb
           # The chart defaults requests (100m/128Mi) but leaves limits unset — cap it (repo rule: limits
           # on EVERY container; P10 lean precedent for a 2-node t3a.medium cluster).
           resources:
