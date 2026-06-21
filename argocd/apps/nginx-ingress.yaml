@@ -56,6 +56,11 @@ spec:
             annotations:
               # In-tree CCM: provision a Network Load Balancer (L4), not the deprecated Classic ELB.
               service.beta.kubernetes.io/aws-load-balancer-type: nlb
+              # Cross-zone ON: the controller runs on ONE node, so only one NLB target is healthy. NLB
+              # cross-zone defaults OFF (unlike the old CLB), so the other AZ's NLB IP dead-ends. The
+              # sslip host pins a single NLB IP — without cross-zone it's a coin-flip whether that IP can
+              # reach the healthy node. Cross-zone makes every NLB IP route to the healthy target.
+              service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
           # The chart defaults requests (100m/128Mi) but leaves limits unset — cap it (repo rule: limits
           # on EVERY container; P10 lean precedent for a 2-node t3a.medium cluster).
           resources:
