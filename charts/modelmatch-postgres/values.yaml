@@ -93,7 +93,7 @@ migrate:
     # `app.catalog.seed` / `app.demo.seed` entrypoints, so one tag bump covers all.
     registry: 832285994273.dkr.ecr.ap-south-1.amazonaws.com
     repository: modelmatch-backend
-    tag: "1.0.10"
+    tag: "1.0.11"
     pullPolicy: IfNotPresent
   resources:
     requests:
