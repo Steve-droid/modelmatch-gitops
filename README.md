@@ -68,7 +68,7 @@ modelmatch-gitops/
 ├── charts/
 │   ├── modelmatch/            # umbrella = the product chart (release boundary)
 │   │   ├── Chart.yaml         # deps: backend, frontend (local, condition <name>.enabled)
-│   │   ├── values.yaml        # global.imageRegistry + global.sslipIp + backend:/frontend: + ingress:
+│   │   ├── values.yaml        # global.awsAccountId/awsRegion + global.sslipIp + backend:/frontend: + ingress:
 │   │   ├── templates/         # host-based Ingress (F5 master/minion) + NOTES.txt
 │   │   └── charts/{backend,frontend}/   # FastAPI + nginx subcharts (Deployment+Service+ConfigMap, probes)
 │   ├── modelmatch-postgres/   # CNPG Cluster + gp3 StorageClass + migrate Job (P13)
@@ -175,6 +175,12 @@ single-SAN cert (`modelmatch-app-tls` / `modelmatch-api-tls`).
 - Resource requests/limits on **every** container; backend capped at **1Gi** (the ingestion-OOM gotcha).
 - Branching: `feature/<story-id>-<desc>` → PR (self-review) → merge `--no-ff` → `main`. Conventional
   Commits; SemVer tags. Verification = `helm lint` + `helm template`, never `helm install`.
+- **Account switch (P33b, "Option B"):** the AWS account id is never a literal in a template. It lives in
+  **three places only** — `charts/modelmatch/values.yaml` `global.awsAccountId`/`awsRegion` (ECR registry
+  host + backend IRSA ARN are templated from it), the same `global:` block in
+  `charts/modelmatch-postgres/values.yaml` (its own Application, so its own copy), and the hand-maintained
+  ESO role ARN in `argocd/apps/external-secrets.yaml` (upstream chart, inline values). Moving accounts =
+  edit those three + `S3_BUCKET`; `grep -rn <old-account-id> charts argocd` must return nothing.
 
 ## Contact
 

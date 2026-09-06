@@ -1,4 +1,4 @@
-{{- $img := printf "%s/%s:%s" .Values.migrate.image.registry .Values.migrate.image.repository .Values.migrate.image.tag -}}
+{{- $img := include "postgres.migrateImage" . -}}
 # Catalog auto-seed Job (P30) — `python -m app.catalog.seed`, an ArgoCD PostSync HOOK.
 #
 # WHY here + WHY this order: the catalog is reference data the recommender ranks over,

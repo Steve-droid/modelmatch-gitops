@@ -4,10 +4,10 @@
 enabled: true
 replicaCount: 1
 
-# global.imageRegistry is normally injected by the umbrella; this default lets the
-# subchart render on its own too.
+# global.awsAccountId / global.awsRegion (P33b) are injected by the umbrella ONLY — no
+# copy here, on purpose (one source of truth for the account). A standalone render
+# must pass them: --set-string global.awsAccountId=<id>,global.awsRegion=<region>.
 global:
-  imageRegistry: 832285994273.dkr.ecr.ap-south-1.amazonaws.com
   # P15: the public-host source of truth, normally injected by the umbrella. The
   # ConfigMap derives PUBLIC_BASE_URL/CORS_ALLOW_ORIGINS from it; this default keeps
   # standalone render working. "0.0.0.0" = not-yet-computed sentinel.
@@ -23,13 +23,14 @@ containerPort: 8000
 
 # IRSA (P14). The SA name is PINNED (role A's trust is bound to
 # system:serviceaccount:app:modelmatch-backend) — do not change it. The role-arn
-# annotation is a non-secret identifier (account id + role name), safe in values.
+# annotation is templated (P33b) as arn:aws:iam::<global.awsAccountId>:role/<irsaRoleName>;
+# only the role NAME lives here. `annotations` = optional extras merged in.
 serviceAccount:
   create: true
   name: modelmatch-backend
   automount: true
-  annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::832285994273:role/modelmatch-backend-irsa
+  irsaRoleName: modelmatch-backend-irsa
+  annotations: {}
 
 # ESO-synced Secret (P12) the secret env reads from. Non-secret NAME, not the values.
 appSecretName: modelmatch-app-secrets
@@ -51,7 +52,7 @@ config:
   QUALITY_THRESHOLD: "0.8"
   AWS_REGION: "ap-south-1"
   BEDROCK_MODEL_ID: "apac.amazon.nova-lite-v1:0"
-  S3_BUCKET: "modelmatch-ingestion-sources"
+  S3_BUCKET: "modelmatch-ingestion-sources-957261948820"
   LLM_CLIENT: "bedrock"
   LLM_HOURLY_TOKEN_CAP: "200000"
   # P15: PUBLIC_BASE_URL + CORS_ALLOW_ORIGINS are derived from global.sslipIp in the

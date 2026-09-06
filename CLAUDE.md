@@ -26,7 +26,7 @@ Humans author chart structure; the CI Deploy stage edits image tags; ArgoCD sync
 ```
 charts/modelmatch/                 # umbrella = the ModelMatch product chart (release boundary)
 ├── Chart.yaml                     # dependencies: backend, frontend (local, condition <name>.enabled)
-├── values.yaml                    # global.imageRegistry + backend:/frontend: blocks
+├── values.yaml                    # global.awsAccountId/awsRegion + global.sslipIp + backend:/frontend: blocks
 ├── templates/NOTES.txt            # render summary (no workload templates at umbrella level)
 └── charts/
     ├── backend/                   # FastAPI: Deployment+Service+ConfigMap, probes /healthz /readyz
@@ -38,8 +38,10 @@ charts/modelmatch/                 # umbrella = the ModelMatch product chart (re
   in one umbrella render.
 - **Values flow:** umbrella `values.yaml` has a `backend:`/`frontend:` block per subchart + a shared
   `global:` block. Env-specific overrides layer on later as `values-<env>.yaml` **without restructuring**.
-- **Image wiring:** `global.imageRegistry` (the ECR registry) + per-subchart `image.repository`/`image.tag`.
-  The CI Deploy stage (P17/P18) bumps **one `tag` field** per repo.
+- **Image wiring:** the ECR registry host is **derived** from `global.awsAccountId` + `global.awsRegion`
+  (subchart `<name>.registry` helpers, P33b) + per-subchart `image.repository`/`image.tag`. The CI Deploy
+  stage (P17/P18) bumps **one `tag` field** per repo. The account id is never a template literal —
+  see README "Account switch".
 
 ## Hard rules (don't re-derive)
 

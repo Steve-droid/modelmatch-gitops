@@ -4,8 +4,9 @@
 enabled: true
 replicaCount: 1
 
+# global.awsAccountId / global.awsRegion (P33b) are injected by the umbrella ONLY — no
+# copy here (one source of truth). Standalone render: --set-string global.awsAccountId=<id>,global.awsRegion=<region>.
 global:
-  imageRegistry: 832285994273.dkr.ecr.ap-south-1.amazonaws.com
   # P15: public-host source of truth, normally injected by the umbrella. The ConfigMap
   # derives API_BASE_URL from it; this default keeps standalone render working.
   sslipIp: "0.0.0.0"
