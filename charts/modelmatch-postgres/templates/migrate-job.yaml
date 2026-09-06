@@ -1,4 +1,4 @@
-{{- $img := printf "%s/%s:%s" .Values.migrate.image.registry .Values.migrate.image.repository .Values.migrate.image.tag -}}
+{{- $img := include "postgres.migrateImage" . -}}
 # Schema migration Job — `alembic upgrade head`, run as an ArgoCD PostSync HOOK.
 #
 # WHY PostSync (not PreSync): on a fresh install the Cluster is created in the main

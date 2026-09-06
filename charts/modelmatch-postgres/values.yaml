@@ -9,6 +9,13 @@
 # Namespace everything lands in. `app` is Terraform-created (P10); this chart does
 # NOT create it (the ArgoCD child app has no CreateNamespace).
 namespace: app
+# P33b (Option B) — AWS account + region: the ONLY account-scoped literal in this chart.
+# This chart is its own ArgoCD Application (not a subchart of the umbrella), so it
+# carries its own copy; the migrate/seed Jobs' image registry host is templated from it
+# (see templates/_helpers.tpl). Keep in step with charts/modelmatch/values.yaml.
+global:
+  awsAccountId: "957261948820"
+  awsRegion: ap-south-1
 # ── The CloudNativePG Cluster ────────────────────────────────────────────────
 cluster:
   # Cluster name → CNPG derives the Services from it:
@@ -91,7 +98,8 @@ migrate:
     # schema step (also used for the wait-for-db initContainer — one pull). The seed
     # Jobs (P30) reuse this image + resources — the backend image ships their
     # `app.catalog.seed` / `app.demo.seed` entrypoints, so one tag bump covers all.
-    registry: 832285994273.dkr.ecr.ap-south-1.amazonaws.com
+    # Registry host is derived from global.awsAccountId + global.awsRegion (P33b);
+    # `registry` may be set here as an explicit override.
     repository: modelmatch-backend
     tag: "1.0.12"
     pullPolicy: IfNotPresent

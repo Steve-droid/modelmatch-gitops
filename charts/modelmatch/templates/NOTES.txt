@@ -5,10 +5,10 @@ deployment from P14. Nothing is "Ready" from a `helm template` / `helm lint`.
 
 Components in this render:
 {{- if .Values.backend.enabled }}
-  - backend  : {{ .Values.global.imageRegistry }}/{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}  (port {{ .Values.backend.containerPort }})
+  - backend  : {{ .Values.global.awsAccountId }}.dkr.ecr.{{ .Values.global.awsRegion }}.amazonaws.com/{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}  (port {{ .Values.backend.containerPort }})
 {{- end }}
 {{- if .Values.frontend.enabled }}
-  - frontend : {{ .Values.global.imageRegistry }}/{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}  (port {{ .Values.frontend.containerPort }})
+  - frontend : {{ .Values.global.awsAccountId }}.dkr.ecr.{{ .Values.global.awsRegion }}.amazonaws.com/{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}  (port {{ .Values.frontend.containerPort }})
 {{- end }}
 
 Not in this chart yet:

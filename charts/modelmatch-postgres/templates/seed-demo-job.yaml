@@ -1,5 +1,5 @@
 {{- if .Values.seed.demo }}
-{{- $img := printf "%s/%s:%s" .Values.migrate.image.registry .Values.migrate.image.repository .Values.migrate.image.tag -}}
+{{- $img := include "postgres.migrateImage" . -}}
 # Demo dataset auto-seed Job (P30) — `python -m app.demo.seed`, a gated ArgoCD PostSync
 # HOOK. Rendered ONLY when seed.demo is true (demo/portfolio env) — a real env leaves it
 # off and ships zero demo fixtures.

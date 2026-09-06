@@ -30,10 +30,25 @@ app.kubernetes.io/part-of: modelmatch
 app.kubernetes.io/component: backend
 {{- end -}}
 
-{{/* Fully-qualified image ref from the shared registry + per-subchart repo/tag. */}}
+{{/*
+ECR registry host (P33b, Option B): derived from the umbrella's global.awsAccountId +
+global.awsRegion so the account id lives in ONE place. `image.registry` is an explicit
+per-subchart override (unset by default). `required` makes a render without the globals
+fail loudly instead of producing a broken ".dkr.ecr..amazonaws.com" host.
+*/}}
+{{- define "backend.registry" -}}
+{{- if .Values.image.registry -}}
+{{- .Values.image.registry -}}
+{{- else -}}
+{{- $account := (required "global.awsAccountId is required (set in the umbrella values)" .Values.global.awsAccountId | toString) -}}
+{{- $region := (required "global.awsRegion is required (set in the umbrella values)" .Values.global.awsRegion | toString) -}}
+{{- printf "%s.dkr.ecr.%s.amazonaws.com" $account $region -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Fully-qualified image ref from the derived registry + per-subchart repo/tag. */}}
 {{- define "backend.image" -}}
-{{- $registry := .Values.image.registry | default .Values.global.imageRegistry -}}
-{{- printf "%s/%s:%s" $registry .Values.image.repository (.Values.image.tag | toString) -}}
+{{- printf "%s/%s:%s" (include "backend.registry" .) .Values.image.repository (.Values.image.tag | toString) -}}
 {{- end -}}
 
 {{/*
