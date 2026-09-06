@@ -1,0 +1,216 @@
+<mxfile host="Electron">
+  <diagram id="cnpgoperatorclustercr" name="CNPG operator + Cluster CR">
+    <mxGraphModel dx="1754" dy="646" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1900" pageHeight="1100" background="#000000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=24;fontStyle=1;align=center;verticalAlign=middle;fontColor=#FFFFFF;" value="ModelMatch — CNPG operator, Cluster CRD, Cluster CR, and generated Postgres resources" vertex="1">
+          <mxGeometry height="40" width="1200" x="320" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="ns_argocd" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#326CE5;dashed=1;fontColor=#FFFFFF;fontSize=13;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" value="namespace: argocd" vertex="1">
+          <mxGeometry height="606" width="604" x="-308" y="135" as="geometry" />
+        </mxCell>
+        <mxCell id="ns_cnpg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#82B366;dashed=1;fontColor=#FFFFFF;fontSize=13;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;" value="namespace: cnpg-system" vertex="1">
+          <mxGeometry height="250" width="360" x="560" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="api_box" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#94A3B8;dashed=1;fontColor=#FFFFFF;fontSize=13;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;" value="Kubernetes API extension" vertex="1">
+          <mxGeometry height="250" width="360" x="990" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="ns_app" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#879196;dashed=1;fontColor=#FFFFFF;fontSize=13;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;" value="namespace: app" vertex="1">
+          <mxGeometry height="500" width="1250" x="540" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="root_app_icon" parent="1" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=crd;fontSize=11;" value="Application CR&#xa;root App-of-Apps&#xa;seeded by Terraform" vertex="1">
+          <mxGeometry height="58" width="58" x="-206" y="195" as="geometry" />
+        </mxCell>
+        <mxCell id="root_app_label_anchor" parent="1" style="ellipse;html=1;fillColor=none;strokeColor=none;opacity=0;connectable=0;resizable=0;rotatable=0;deletable=0;editable=0;" value="" vertex="1">
+          <mxGeometry height="4" width="4" x="-179" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="argocd_controller_icon" parent="1" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=deploy;fontSize=11;points=[[0,0.5,0,0,0],[0.89,0.77,0,0,0],[0.95,0.5,0,0,0]];" value="Deployment&#xa;argocd-application-controller&#xa;reconciles Applications" vertex="1">
+          <mxGeometry height="64" width="64" x="-209" y="516" as="geometry" />
+        </mxCell>
+        <mxCell id="argocd_controller_label_anchor" parent="1" style="ellipse;html=1;fillColor=none;strokeColor=none;opacity=0;connectable=0;resizable=0;rotatable=0;deletable=0;editable=0;" value="" vertex="1">
+          <mxGeometry height="4" width="4" x="-179" y="675" as="geometry" />
+        </mxCell>
+        <mxCell id="argocd_controller_note" parent="1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#BFDBFE;fontSize=11;fontStyle=2;" value="Fetches Git / Helm source, diffs live state,&#xa;then applies patches to the Kubernetes API." vertex="1">
+          <mxGeometry height="45" width="370" x="-204" y="693" as="geometry" />
+        </mxCell>
+        <mxCell id="operator_app_icon" parent="1" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=crd;fontSize=11;" value="Application CR&#xa;cnpg-operator&#xa;wave -1" vertex="1">
+          <mxGeometry height="58" width="58" x="171" y="226" as="geometry" />
+        </mxCell>
+        <mxCell id="operator_app_label_anchor" parent="1" style="ellipse;html=1;fillColor=none;strokeColor=none;opacity=0;connectable=0;resizable=0;rotatable=0;deletable=0;editable=0;" value="" vertex="1">
+          <mxGeometry height="4" width="4" x="198" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="postgres_app_icon" parent="1" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=crd;fontSize=11;" value="Application CR&#xa;modelmatch-postgres&#xa;wave 1" vertex="1">
+          <mxGeometry height="58" width="58" x="74" y="533" as="geometry" />
+        </mxCell>
+        <mxCell id="postgres_app_label_anchor" parent="1" style="ellipse;html=1;fillColor=none;strokeColor=none;opacity=0;connectable=0;resizable=0;rotatable=0;deletable=0;editable=0;" value="" vertex="1">
+          <mxGeometry height="4" width="4" x="101" y="660" as="geometry" />
+        </mxCell>
+        <mxCell id="cnpg_deploy_icon" parent="1" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=deploy;fontSize=11;" value="Deployment&#xa;cnpg-controller-manager" vertex="1">
+          <mxGeometry height="62" width="62" x="665" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="cnpg_deploy_label_anchor" parent="1" style="ellipse;html=1;fillColor=none;strokeColor=none;opacity=0;connectable=0;resizable=0;rotatable=0;deletable=0;editable=0;" value="" vertex="1">
+          <mxGeometry height="4" width="4" x="694" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="cnpg_deploy_note" parent="1" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=middle;fontColor=#A7F3D0;fontSize=11;fontStyle=2;" value="CNPG controller workload&#xa;not the Control Plane&#xa;kube-controller-manager" vertex="1">
+          <mxGeometry height="60" width="190" x="740" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="crd_icon" parent="1" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=crd;fontSize=11;" value="CRDs&#xa;postgresql.cnpg.io&#xa;includes Cluster" vertex="1">
+          <mxGeometry height="62" width="62" x="1125" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="crd_label_anchor" parent="1" style="ellipse;html=1;fillColor=none;strokeColor=none;opacity=0;connectable=0;resizable=0;rotatable=0;deletable=0;editable=0;" value="" vertex="1">
+          <mxGeometry height="4" width="4" x="1154" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="api_note" parent="1" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=middle;fontColor=#CBD5E1;fontSize=11;fontStyle=2;" value="After this, the API server accepts&#xa;apiVersion: postgresql.cnpg.io/v1&#xa;kind: Cluster" vertex="1">
+          <mxGeometry height="65" width="230" x="1086" y="335" as="geometry" />
+        </mxCell>
+        <mxCell id="sc_icon" parent="1" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=sc;fontSize=11;" value="StorageClass&#xa;modelmatch-gp3&#xa;cluster-scoped" vertex="1">
+          <mxGeometry height="58" width="58" x="430" y="860" as="geometry" />
+        </mxCell>
+        <mxCell id="sc_label_anchor" parent="1" style="ellipse;html=1;fillColor=none;strokeColor=none;opacity=0;connectable=0;resizable=0;rotatable=0;deletable=0;editable=0;" value="" vertex="1">
+          <mxGeometry height="4" width="4" x="457" y="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="cluster_cr_icon" parent="1" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=crd;fontSize=11;" value="CNPG Cluster CR&#xa;modelmatch-postgres&#xa;instances: 2&#xa;desired state" vertex="1">
+          <mxGeometry height="62" width="62" x="700" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="cluster_cr_label_anchor" parent="1" style="ellipse;html=1;fillColor=none;strokeColor=none;opacity=0;connectable=0;resizable=0;rotatable=0;deletable=0;editable=0;" value="" vertex="1">
+          <mxGeometry height="4" width="4" x="729" y="795" as="geometry" />
+        </mxCell>
+        <mxCell id="job_icon" parent="1" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=job;fontSize=11;" value="Job&#xa;migrate&#xa;PostSync" vertex="1">
+          <mxGeometry height="58" width="58" x="720" y="820" as="geometry" />
+        </mxCell>
+        <mxCell id="job_label_anchor" parent="1" style="ellipse;html=1;fillColor=none;strokeColor=none;opacity=0;connectable=0;resizable=0;rotatable=0;deletable=0;editable=0;" value="" vertex="1">
+          <mxGeometry height="4" width="4" x="747" y="945" as="geometry" />
+        </mxCell>
+        <mxCell id="runtime_box" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#5B8DEF;dashed=1;fontColor=#FFFFFF;fontSize=12;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;" value="CNPG-created Postgres runtime" vertex="1">
+          <mxGeometry height="300" width="390" x="980" y="580" as="geometry" />
+        </mxCell>
+        <mxCell id="consumer_box" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#2DD4BF;dashed=1;fontColor=#FFFFFF;fontSize=12;fontStyle=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;" value="app consumers" vertex="1">
+          <mxGeometry height="300" width="320" x="1430" y="580" as="geometry" />
+        </mxCell>
+        <mxCell id="pod_icon" parent="1" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=pod;fontSize=11;" value="Pods&#xa;primary + replica" vertex="1">
+          <mxGeometry height="58" width="58" x="1040" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="pod_label_anchor" parent="1" style="ellipse;html=1;fillColor=none;strokeColor=none;opacity=0;connectable=0;resizable=0;rotatable=0;deletable=0;editable=0;" value="" vertex="1">
+          <mxGeometry height="4" width="4" x="1067" y="770" as="geometry" />
+        </mxCell>
+        <mxCell id="pvc_icon" parent="1" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=pvc;fontSize=11;" value="PVCs&#xa;one per instance&#xa;use gp3 SC" vertex="1">
+          <mxGeometry height="58" width="58" x="1240" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="pvc_label_anchor" parent="1" style="ellipse;html=1;fillColor=none;strokeColor=none;opacity=0;connectable=0;resizable=0;rotatable=0;deletable=0;editable=0;" value="" vertex="1">
+          <mxGeometry height="4" width="4" x="1267" y="775" as="geometry" />
+        </mxCell>
+        <mxCell id="svc_icon" parent="1" style="sketch=0;html=1;dashed=0;whiteSpace=wrap;fillColor=#326ce5;strokeColor=#ffffff;fontColor=#FFFFFF;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;align=center;shape=mxgraph.kubernetes.icon;prIcon=svc;fontSize=11;" value="Services&#xa;-rw / -ro / -r" vertex="1">
+          <mxGeometry height="58" width="58" x="1138" y="790" as="geometry" />
+        </mxCell>
+        <mxCell id="svc_label_anchor" parent="1" style="ellipse;html=1;fillColor=none;strokeColor=none;opacity=0;connectable=0;resizable=0;rotatable=0;deletable=0;editable=0;" value="" vertex="1">
+          <mxGeometry height="4" width="4" x="1165" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="backend_text" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#042F2E;strokeColor=#2DD4BF;fontColor=#CCFBF1;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" value="Backend + migrate Job connect to&#xa;modelmatch-postgres-rw:5432" vertex="1">
+          <mxGeometry height="82" width="250" x="1462" y="740" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_root_controller" edge="1" parent="1" source="argocd_controller_label_anchor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;strokeColor=#5B8DEF;fontColor=#FFFFFF;labelBackgroundColor=#000000;" target="root_app_label_anchor" value="watches root Application">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-260" y="677" />
+              <mxPoint x="-260" y="332" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_root_operator" edge="1" parent="1" source="argocd_controller_label_anchor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;strokeColor=#82B366;fontColor=#FFFFFF;labelBackgroundColor=#000000;" target="operator_app_label_anchor" value="applies child Application first">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-285" y="677" />
+              <mxPoint x="-285" y="352" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_root_postgres" edge="1" parent="1" source="argocd_controller_label_anchor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;strokeColor=#F6AD55;fontColor=#FFFFFF;labelBackgroundColor=#000000;" target="postgres_app_label_anchor" value="applies child Application later">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-95" y="677" />
+              <mxPoint x="103" y="677" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_operator_deploy" edge="1" parent="1" source="operator_app_label_anchor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;strokeColor=#82B366;fontColor=#FFFFFF;labelBackgroundColor=#000000;" target="cnpg_deploy_label_anchor" value="Helm installs Deployment">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="410" y="352" />
+              <mxPoint x="696" y="352" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_operator_crd" edge="1" parent="1" source="operator_app_label_anchor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;strokeColor=#82B366;fontColor=#FFFFFF;labelBackgroundColor=#000000;" target="crd_label_anchor" value="Helm installs CRDs">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="410" y="352" />
+              <mxPoint x="1156" y="352" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_postgres_sc" edge="1" parent="1" source="postgres_app_label_anchor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;strokeColor=#F6AD55;fontColor=#FFFFFF;labelBackgroundColor=#000000;" target="sc_label_anchor" value="applies StorageClass">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="662" />
+              <mxPoint x="300" y="1002" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_postgres_cluster" edge="1" parent="1" source="postgres_app_label_anchor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;strokeColor=#F6AD55;fontColor=#FFFFFF;labelBackgroundColor=#000000;" target="cluster_cr_label_anchor" value="applies Cluster CR">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="500" y="662" />
+              <mxPoint x="500" y="797" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_postgres_job" edge="1" parent="1" source="postgres_app_label_anchor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;strokeColor=#F6AD55;fontColor=#FFFFFF;labelBackgroundColor=#000000;" target="job_label_anchor" value="PostSync hook">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="350" y="662" />
+              <mxPoint x="350" y="947" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_controller_watches" edge="1" parent="1" source="cnpg_deploy_label_anchor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;strokeColor=#5B8DEF;fontColor=#FFFFFF;labelBackgroundColor=#000000;" target="cluster_cr_label_anchor" value="watches Cluster CR desired state">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="920" y="332" />
+              <mxPoint x="920" y="797" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_cluster_pods" edge="1" parent="1" source="cnpg_deploy_label_anchor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;strokeColor=#5B8DEF;fontColor=#FFFFFF;labelBackgroundColor=#000000;" target="runtime_box" value="creates / maintains runtime from Cluster spec">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="696" y="520" />
+              <mxPoint x="1185" y="520" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_sc_pvc" edge="1" parent="1" source="sc_label_anchor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;strokeColor=#7AA116;fontColor=#FFFFFF;labelBackgroundColor=#000000;" target="pvc_label_anchor" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="459" y="1002" />
+              <mxPoint x="1269" y="1002" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_job_svc" edge="1" parent="1" source="job_label_anchor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;strokeColor=#2DD4BF;fontColor=#FFFFFF;labelBackgroundColor=#000000;" target="svc_label_anchor" value="migrates via -rw">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1167" y="947" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_backend_svc" edge="1" parent="1" source="backend_text" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;strokeColor=#2DD4BF;fontColor=#FFFFFF;labelBackgroundColor=#000000;" target="svc_label_anchor" value="uses -rw service">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ordering_note" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E1B4B;strokeColor=#818CF8;fontColor=#E0E7FF;fontSize=13;align=left;verticalAlign=middle;spacingLeft=14;spacingRight=14;" value="Ordering point: modelmatch-postgres can only apply kind: Cluster after the CNPG chart has registered the Cluster CRD. The CNPG controller-manager Deployment then watches that Cluster object and reconciles the actual Postgres runtime." vertex="1">
+          <mxGeometry height="80" width="760" x="560" y="1030" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
