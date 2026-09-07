@@ -101,7 +101,7 @@ migrate:
     # Registry host is derived from global.awsAccountId + global.awsRegion (P33b);
     # `registry` may be set here as an explicit override.
     repository: modelmatch-backend
-    tag: "1.0.13"
+    tag: "1.0.15"
     pullPolicy: IfNotPresent
   resources:
     requests:
@@ -126,3 +126,8 @@ seed:
   email: stevelevit230@gmail.com
   projectName: demo-api
   runCount: 30
+  # P38c: the SECOND demo project, for the security-analysis task, so the dashboard
+  # shows both tasks side by side. Set securityProjectName to "" to seed only the
+  # review demo. Its pick comes from a real recommend() call, not a fixture.
+  securityProjectName: demo-sec
+  securityRunCount: 20
