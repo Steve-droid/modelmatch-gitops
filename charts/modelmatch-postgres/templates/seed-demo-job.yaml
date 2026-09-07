@@ -74,6 +74,12 @@ spec:
               value: {{ .Values.seed.projectName | quote }}
             - name: DEMO_SEED_RUN_COUNT
               value: {{ .Values.seed.runCount | quote }}
+            # P38c: the security demo project. Wired explicitly (this template lists env
+            # vars one by one), so both this file and values.yaml need the addition.
+            - name: DEMO_SEED_SECURITY_PROJECT
+              value: {{ .Values.seed.securityProjectName | quote }}
+            - name: DEMO_SEED_SECURITY_RUN_COUNT
+              value: {{ .Values.seed.securityRunCount | quote }}
             # The demo user's login password — the only secret, via ESO (never Git).
             - name: DEMO_SEED_PASSWORD
               valueFrom:
