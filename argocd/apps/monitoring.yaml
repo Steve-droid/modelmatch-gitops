@@ -130,9 +130,11 @@ spec:
           # imports the ConfigMap shipped by the monitoring-dashboards app.
           persistence:
             enabled: false               # dashboards come from ConfigMaps → no PVC needed
+          # Grafana 13 idles at ~220Mi with the 26 provisioned dashboards; a 256Mi limit
+          # OOMKilled it (exitCode 137) on the first UI load (2026-09-07). 512Mi = headroom.
           resources:
-            requests: { cpu: 50m,  memory: 128Mi }
-            limits:   { cpu: 200m, memory: 256Mi }
+            requests: { cpu: 50m,  memory: 256Mi }
+            limits:   { cpu: 200m, memory: 512Mi }
           # The dashboard + datasource sidecar containers only get resources when
           # grafana.sidecar.resources is set (chart defaults them to {}). Cap them —
           # but the k8s-sidecar watches ConfigMaps cluster-wide, so 64Mi OOMKilled it
