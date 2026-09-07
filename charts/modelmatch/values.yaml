@@ -112,6 +112,9 @@ backend:
     # broken recommendation however good its score; excluded rows stay in the
     # catalog and the chat, and the response reports rankedCount vs candidateCount.
     RECOMMEND_ONLY_RUNNABLE: "true"
+    # P38h: show four options so the 4th-ranked runnable model (GPT-5.5 at budget
+    # High on security_analysis) is visible; backend default is 3.
+    RECOMMENDATION_SHORTLIST_SIZE: "4"
     QUALITY_THRESHOLD: "0.8"
     AWS_REGION: "ap-south-1"
     BEDROCK_MODEL_ID: "apac.amazon.nova-lite-v1:0"
