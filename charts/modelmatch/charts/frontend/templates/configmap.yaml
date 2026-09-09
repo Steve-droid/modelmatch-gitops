@@ -8,6 +8,10 @@ data:
   {{- range $key, $val := .Values.config }}
   {{ $key }}: {{ $val | quote }}
   {{- end }}
-  # P15 — the public backend host the browser calls, derived from the single source of
-  # truth (global.sslipIp). The entrypoint templates this into window.__APP_CONFIG__.
-  API_BASE_URL: {{ printf "https://api.%s.sslip.io" (required "global.sslipIp must be set — run scripts/recompute-host.sh" .Values.global.sslipIp) | quote }}
+  {{- $api := printf "api.%s.sslip.io" .Values.global.sslipIp }}
+  {{- if .Values.global.useCustomHosts }}
+  {{- $api = required "global.apiHost is required for custom hosts" .Values.global.apiHost }}
+  {{- end }}
+  # Switched only after branded ingress certificates are ready. The entrypoint
+  # templates this public URL into window.__APP_CONFIG__.
+  API_BASE_URL: {{ printf "https://%s" $api | quote }}

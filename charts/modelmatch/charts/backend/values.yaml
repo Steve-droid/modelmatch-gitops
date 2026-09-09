@@ -12,6 +12,10 @@ global:
   # ConfigMap derives PUBLIC_BASE_URL/CORS_ALLOW_ORIGINS from it; this default keeps
   # standalone render working. "0.0.0.0" = not-yet-computed sentinel.
   sslipIp: "0.0.0.0"
+  appHost: ""
+  apiHost: ""
+  useCustomHosts: false
+  retainSslipHosts: true
 
 image:
   repository: modelmatch-backend

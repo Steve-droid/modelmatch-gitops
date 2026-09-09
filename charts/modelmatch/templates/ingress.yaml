@@ -2,7 +2,8 @@
 {{- /*
 P15 — routing through P11's one F5 NGINX ingress ELB (never creates a LoadBalancer).
 Host-based: app.<ip>.sslip.io -> frontend, api.<ip>.sslip.io -> backend (FastAPI at
-ROOT — no /api prefix, no rewrite). Both hosts derive from global.sslipIp.
+ROOT — no /api prefix, no rewrite). Custom hosts are added alongside sslip.io hosts
+for certificate provisioning before the runtime URL switch.
 
 F5 MERGEABLE INGRESS (master/minion). F5 will not merge a second Ingress onto a host
 the app already owns, and cert-manager's HTTP-01 solver IS a second Ingress on the same
@@ -16,10 +17,26 @@ ssl-redirect is forced off (F5 otherwise 301s HTTP->HTTPS, breaking the HTTP-01 
 on port 80 and the renewals). TLS is per host: each master owns its own single-SAN
 Certificate/Secret (two masters cannot share one secret).
 */}}
-{{- $ip := required "global.sslipIp must be set — run scripts/recompute-host.sh before sync" .Values.global.sslipIp -}}
-{{- $hosts := list
+{{- $ip := required "global.sslipIp must be set" .Values.global.sslipIp -}}
+{{- if and .Values.global.appHost (or
+  (eq .Values.global.appHost .Values.global.apiHost)
+  (eq .Values.global.appHost (printf "app.%s.sslip.io" $ip))
+  (eq .Values.global.appHost (printf "api.%s.sslip.io" $ip))
+  (eq .Values.global.apiHost (printf "app.%s.sslip.io" $ip))
+  (eq .Values.global.apiHost (printf "api.%s.sslip.io" $ip))) -}}
+{{- fail "Custom app/API hosts must be distinct from each other and the legacy hosts" -}}
+{{- end -}}
+{{- $hosts := list -}}
+{{- if .Values.global.retainSslipHosts -}}
+{{- $hosts = list
       (dict "role" "app" "host" (printf "app.%s.sslip.io" $ip) "svc" .Values.ingress.app.service "port" .Values.ingress.app.port "tls" .Values.ingress.app.tlsSecretName)
       (dict "role" "api" "host" (printf "api.%s.sslip.io" $ip) "svc" .Values.ingress.api.service "port" .Values.ingress.api.port "tls" .Values.ingress.api.tlsSecretName) -}}
+{{- end -}}
+{{- if and .Values.global.appHost .Values.global.apiHost -}}
+{{- $hosts = concat $hosts (list
+      (dict "role" "app-branded" "host" .Values.global.appHost "svc" .Values.ingress.app.service "port" .Values.ingress.app.port "tls" (printf "%s-branded" .Values.ingress.app.tlsSecretName))
+      (dict "role" "api-branded" "host" .Values.global.apiHost "svc" .Values.ingress.api.service "port" .Values.ingress.api.port "tls" (printf "%s-branded" .Values.ingress.api.tlsSecretName))) -}}
+{{- end -}}
 {{- range $h := $hosts }}
 ---
 # {{ $h.role }} host — MASTER: host + TLS + cert-manager; NO http paths (F5 master rule).

@@ -8,9 +8,20 @@ data:
   {{- range $key, $val := .Values.config }}
   {{ $key }}: {{ $val | quote }}
   {{- end }}
-  # P15 — public URLs derived from the single source of truth (global.sslipIp), so the
-  # FE/BE never drift. The browser hits these; they are NOT in-cluster Service DNS.
-  #   PUBLIC_BASE_URL   = the backend's own public host (used in the /ci-setup snippet)
-  #   CORS_ALLOW_ORIGINS = the FE origin allowed to call the cross-origin API
-  PUBLIC_BASE_URL: {{ printf "https://api.%s.sslip.io" (required "global.sslipIp must be set — run scripts/recompute-host.sh" .Values.global.sslipIp) | quote }}
-  CORS_ALLOW_ORIGINS: {{ printf "https://app.%s.sslip.io" (required "global.sslipIp must be set — run scripts/recompute-host.sh" .Values.global.sslipIp) | quote }}
+  {{- $legacyApp := printf "app.%s.sslip.io" .Values.global.sslipIp }}
+  {{- $legacyApi := printf "api.%s.sslip.io" .Values.global.sslipIp }}
+  {{- $api := $legacyApi }}
+  {{- if .Values.global.useCustomHosts }}
+  {{- $api = required "global.apiHost is required for custom hosts" .Values.global.apiHost }}
+  {{- end }}
+  {{- $origins := list }}
+  {{- if or (not .Values.global.useCustomHosts) .Values.global.retainSslipHosts }}
+  {{- $origins = append $origins (printf "https://%s" $legacyApp) }}
+  {{- end }}
+  {{- if .Values.global.appHost }}
+  {{- $origins = append $origins (printf "https://%s" .Values.global.appHost) }}
+  {{- end }}
+  # Stage ingress/TLS first, then switch the public API URL. Accept both app origins
+  # during the transition so existing browser sessions continue to work.
+  PUBLIC_BASE_URL: {{ printf "https://%s" $api | quote }}
+  CORS_ALLOW_ORIGINS: {{ $origins | uniq | join "," | quote }}

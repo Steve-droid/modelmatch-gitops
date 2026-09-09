@@ -1,7 +1,11 @@
-# modelmatch-gitops
+# Modicum — Gitops
+
+> **2026-09-09 update — custom DNS deferred:** AWS rejected the domain registration without a specific cause in its email. Steve chose to keep sslip.io HTTPS for P38m. DNS infrastructure and hostname support are prepared for later; do not register, import, apply or activate them as part of the rebrand release.
+
+> Modicum was previously ModelMatch. Repository and infrastructure identifiers retain `modelmatch` for compatibility.
 
 > **ACTIVE** (since P9). The GitOps source of truth for everything that runs **inside** the EKS cluster —
-> a Helm umbrella + an ArgoCD **App-of-Apps**. Part of the [ModelMatch portfolio build](../CLAUDE.md);
+> a Helm umbrella + an ArgoCD **App-of-Apps**. Part of the [Modicum portfolio build](../CLAUDE.md);
 > spec in [`../docs/planning/architecture.md`](../docs/planning/architecture.md) §12–§13 and
 > `../docs/instructions/lesson-03`. See [`CLAUDE.md`](CLAUDE.md) for the chart layout + hard rules.
 
@@ -21,7 +25,7 @@
 
 The GitOps repo holds the desired state of the cluster. Two layers:
 
-1. **The ModelMatch product chart** — `charts/modelmatch/`, a Helm **umbrella** with **frontend** +
+1. **The Modicum product chart** — `charts/modelmatch/`, a Helm **umbrella** with **frontend** +
    **backend** local subcharts plus the host-based `Ingress` templates. One release boundary for the app.
 2. **Platform charts + ArgoCD App-of-Apps** — a Terraform-seeded **root Application** (in
    `modelmatch-infra/platform/argocd.tf`) watches `argocd/apps/` and fans out to one child `Application`
@@ -186,3 +190,40 @@ single-SAN cert (`modelmatch-app-tls` / `modelmatch-api-tls`).
 
 Steve Levit — stevelevit230@gmail.com
 </content>
+
+## Branded hosts: Modicum DNS cutover (P38m, staged)
+
+Selected names: **modicum.cloud** (app), **api.modicum.cloud** (API). Domain registration and
+DNS/HTTPS cutover are pending; current live clients still use the sslip.io hosts.
+
+`global.appHost` and `global.apiHost` create additional F5 master/minion ingress pairs and
+separate single-host cert-manager certificates. **`global.useCustomHosts: false` is deliberate:**
+the runtime API URL remains the working sslip.io API until both new certificates are Ready.
+Set it to `true` only in the second reviewed deployment, after DNS and trusted HTTPS checks.
+Backend `PUBLIC_BASE_URL` and frontend runtime `API_BASE_URL` switch together. CORS accepts
+both app origins while `global.retainSslipHosts: true`; old Jenkins snippets keep their direct
+API endpoint and do not need POST redirects. Pod config checksums trigger the required rollouts.
+
+With custom names set, `scripts/recompute-host.sh` fails before editing anything: changing the old
+IP would retire existing snippets. Refresh Route 53's alias target through the infra
+[DNS runbook](../modelmatch-infra/dns/README.md). That runbook covers registration/zone import,
+Terraform plan, certificate staging, cutover, rollback, rebuilds, and final teardown.
+A domain change does not migrate browser storage; sign in at the new origin.
+
+Rollback: keep both ingress sets and switch `useCustomHosts` back to `false`. Remove legacy
+hosts/CORS only after clients migrate, by setting `retainSslipHosts: false` while custom hosts
+are active. The schema rejects incomplete host pairs, URL/path values, and unsafe transitions.
+
+Offline checks (Python 3 + PyYAML, Helm):
+
+```sh
+helm lint charts/modelmatch
+helm template modelmatch charts/modelmatch
+uv run --with pyyaml python tests/test_public_hosts.py
+bash -n scripts/recompute-host.sh
+```
+
+The render tests cover the original configuration, staged certificates, runtime cutover,
+legacy retirement, unique certificates/F5 routes, config rollout checksums, and rejected inputs.
+The main values leave custom hostnames empty and retain current image versions; image publication
+and the second URL-switch commit are release steps after review.
