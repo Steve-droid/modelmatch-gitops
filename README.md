@@ -232,3 +232,35 @@ seed or postgres-app sync. ArgoCD deploys the product chart after review. Live c
 2026-09-09 confirmed HTTPS 200 and trusted single-host certificates for app and API, including
 both NLB addresses, plus branded API login/dashboard reads. Passwords/tokens stayed in process;
 chat was skipped. Re-run runtime config, login, dashboard and CI-setup checks after cutover.
+
+
+### Google sign-in and migration-only releases (P38n)
+
+`backend.config.GOOGLE_CLIENT_ID` is the existing Modicum Web public client ID. Its
+subchart default is blank (disabled); no Google client secret or ExternalSecret is used.
+Google's authorized JavaScript origin is `https://modicum.cloud`. Both legacy sslip.io
+routes remain for password sessions and existing API/CI clients. The public privacy page
+is `https://modicum.cloud/privacy.html`.
+
+For the existing populated database, `seed.catalog=false` and `seed.demo=false` omit both
+seed hooks. A reviewed fresh bootstrap must explicitly enable the seeds it needs. The
+migration image is independently pinned in `charts/modelmatch-postgres/values.yaml`.
+
+For a schema-changing release: publish the tested migration image, privately back up and
+restore-check the DB, release only the Postgres chart pin, and request an ArgoCD sync at
+that exact commit. Hook-only changes can show Synced without executing the hook. Verify
+new Job image/creation time/success and schema/data preservation before releasing backend,
+then frontend/client configuration. Never use the normal backend Jenkins Deploy stage for
+this ordering: it bumps app and migration pins simultaneously. Paid Bedrock tests require
+explicit `RUN_LIVE_LLM=true`; P38n uses the Phase 2 local image-publication path.
+
+P38n release: migration PR #27 / v0.18.9 → backend PR #28 / v0.18.10 → frontend/client
+PR #29 / v0.18.11. Schema `e2f3a4b5c6d7`, backend 1.0.20, frontend 1.0.18. Actual Google
+new-user and returning login, stable account/project, collision refusal and password/legacy
+compatibility passed; Google audience is External / In production. The follow-up frontend
+image adds Google's public HTML ownership proof for consent-screen branding, without DNS
+changes. The proof must remain available for Google's periodic ownership checks.
+
+If Google auth needs disabling, blank its public client ID and roll forward. Once Google-only
+users exist, do not blindly restore pre-Google backend code (it assumes non-null passwords)
+or run the migration downgrade (it removes Google identity associations).
