@@ -73,7 +73,7 @@ backend:
     repository: modelmatch-backend
     # 1.0.1 = the boto3-bearing image (built with --extra bedrock) so the in-cluster
     # Bedrock surface works; 1.0.0 had no boto3. FE stays 1.0.0 (unchanged).
-    tag: "1.0.16"
+    tag: "1.0.17"
     pullPolicy: IfNotPresent
   containerPort: 8000
   # IRSA (P14): the backend SA assumes role A (Bedrock + S3) — no static keys. The SA
@@ -115,6 +115,13 @@ backend:
     # P38h: show four options so the 4th-ranked runnable model (GPT-5.5 at budget
     # High on security_analysis) is visible; backend default is 3.
     RECOMMENDATION_SHORTLIST_SIZE: "4"
+    # E20 (P38e): the two CI-agent images the generated Jenkins stage runs — review
+    # (one call over the PR diff) and security (the OpenCode scan). Full private-ECR
+    # refs, pinned to the agent release (agent-v1.1.0, P38d); the user's Jenkins node
+    # pulls them with its own registry credentials (no public mirror in this phase).
+    # Unset, the backend would emit its `modelmatch-agent:latest` defaults.
+    AGENT_IMAGE: "957261948820.dkr.ecr.ap-south-1.amazonaws.com/modelmatch-agent:1.1.0"
+    AGENT_SECURITY_IMAGE: "957261948820.dkr.ecr.ap-south-1.amazonaws.com/modelmatch-agent-security:1.1.0"
     QUALITY_THRESHOLD: "0.8"
     AWS_REGION: "ap-south-1"
     BEDROCK_MODEL_ID: "apac.amazon.nova-lite-v1:0"
@@ -134,7 +141,7 @@ frontend:
   replicaCount: 1
   image:
     repository: modelmatch-frontend
-    tag: "1.0.12"
+    tag: "1.0.13"
     pullPolicy: IfNotPresent
   containerPort: 8080 # nginx-unprivileged listens on 8080 (uid 101)
   service:
