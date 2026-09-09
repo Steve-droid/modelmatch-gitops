@@ -115,7 +115,7 @@ backend:
   # uppercase field name. Secrets are intentionally absent (P12, ESO).
   config:
     # Enable only after frontend and migration verification. Public ID, never a secret.
-    GOOGLE_CLIENT_ID: ""
+    GOOGLE_CLIENT_ID: "366670021842-qk2q0j04qpocjg5l123bjgvcd7bc4e1o.apps.googleusercontent.com"
     BASELINE_MODEL_ID: "Claude Sonnet 4.5"
     # P38c: per-task baselines. Each task is measured by its own benchmark and so
     # deserves its own "expensive default". BASELINE_MODEL_ID above stays the
@@ -155,7 +155,7 @@ frontend:
   replicaCount: 1
   image:
     repository: modelmatch-frontend
-    tag: "1.0.17"
+    tag: "1.0.18"
     pullPolicy: IfNotPresent
   containerPort: 8080 # nginx-unprivileged listens on 8080 (uid 101)
   service:
