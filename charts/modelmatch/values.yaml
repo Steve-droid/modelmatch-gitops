@@ -33,10 +33,10 @@ global:
   sslipIp: "3.111.156.216"
   # P38m: set both names to provision branded ingress/certificates first. Only then
   # switch useCustomHosts on to move browser traffic and newly generated CI snippets.
-  # Registered at Porkbun; stage HTTPS before the separate runtime URL switch.
+  # Route 53 delegation and both trusted HTTPS endpoints verified on 2026-09-09.
   appHost: "modicum.cloud"
   apiHost: "api.modicum.cloud"
-  useCustomHosts: false
+  useCustomHosts: true
   # Keep original ingress names/certificates and old Jenkins snippets working.
   retainSslipHosts: true
 # P15 — routing + TLS behind P11's ONE F5 nginx ELB. Host-based: app.<ip> -> frontend,

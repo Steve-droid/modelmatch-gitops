@@ -18,7 +18,8 @@ def render(*values):
 
 
 def render_custom(*values):
-    return render("global.appHost=modicum.cloud", "global.apiHost=api.modicum.cloud", *values)
+    return render("global.appHost=modicum.cloud", "global.apiHost=api.modicum.cloud",
+                  "global.useCustomHosts=false", *values)
 
 def objects(result):
     assert result.returncode == 0, result.stderr
@@ -36,14 +37,14 @@ class PublicHostTests(unittest.TestCase):
                          {"https://" + host for host in origins})
 
     def test_no_custom_hosts_preserves_original_routes_and_urls(self):
-        docs = objects(render("global.appHost=", "global.apiHost="))
+        docs = objects(render("global.appHost=", "global.apiHost=", "global.useCustomHosts=false"))
         self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 4)
         self.assert_urls(docs, LEGACY_API, [LEGACY_APP])
 
-    def test_committed_values_stage_https_before_runtime_cutover(self):
+    def test_committed_values_use_branded_api_and_retain_legacy_hosts(self):
         docs = objects(render())
         self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 8)
-        self.assert_urls(docs, LEGACY_API, [LEGACY_APP, "modicum.cloud"])
+        self.assert_urls(docs, "api.modicum.cloud", [LEGACY_APP, "modicum.cloud"])
 
     def test_stage_certificates_keeps_runtime_on_original_api(self):
         docs = objects(render_custom())
