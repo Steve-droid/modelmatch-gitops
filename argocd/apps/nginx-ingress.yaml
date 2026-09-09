@@ -51,6 +51,20 @@ spec:
           nginxplus: false # OSS mode (not NGINX Plus)
           replicaCount: 1
           enableCustomResources: false # standard K8s Ingress only — no F5 VirtualServer/TransportServer CRs
+          # Centrally managed snippets; arbitrary Ingress snippets remain disabled.
+          # Match the actual connection scheme, never a client-supplied forwarding header.
+          config:
+            entries:
+              http-snippets: |
+                client_header_timeout 10s;
+                client_body_timeout 10s;
+                map "$scheme:$uri" $modicum_https_redirect {
+                  default 0;
+                  ~^http:/[.]well-known/acme-challenge/ 0;
+                  ~^http: 1;
+                }
+              server-snippets: |
+                if ($modicum_https_redirect) { return 308 https://$host$request_uri; }
           service:
             type: LoadBalancer # the single ingress LB
             annotations:

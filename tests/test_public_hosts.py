@@ -38,17 +38,17 @@ class PublicHostTests(unittest.TestCase):
 
     def test_no_custom_hosts_preserves_original_routes_and_urls(self):
         docs = objects(render("global.appHost=", "global.apiHost=", "global.useCustomHosts=false"))
-        self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 4)
+        self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 5)
         self.assert_urls(docs, LEGACY_API, [LEGACY_APP])
 
     def test_committed_values_use_branded_api_and_retain_legacy_hosts(self):
         docs = objects(render())
-        self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 8)
+        self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 10)
         self.assert_urls(docs, "api.modicum.cloud", [LEGACY_APP, "modicum.cloud"])
 
     def test_stage_certificates_keeps_runtime_on_original_api(self):
         docs = objects(render_custom())
-        self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 8)
+        self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 10)
         self.assert_urls(docs, LEGACY_API, [LEGACY_APP, "modicum.cloud"])
         secrets = []
         for role, host in [("app", LEGACY_APP), ("api", LEGACY_API),
@@ -78,7 +78,7 @@ class PublicHostTests(unittest.TestCase):
 
     def test_retire_legacy_only_after_cutover(self):
         docs = objects(render_custom("global.useCustomHosts=true", "global.retainSslipHosts=false"))
-        self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 4)
+        self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 5)
         self.assert_urls(docs, "api.modicum.cloud", ["modicum.cloud"])
         self.assertNotIn(("Ingress", "modelmatch-api"), docs)
 

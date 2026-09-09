@@ -13,8 +13,8 @@ host. So per host we render:
   - a MINION (mergeable-ingress-type=minion): the actual "/" route.
 cert-manager's solver Ingress joins as ANOTHER minion (annotated via the ClusterIssuer's
 http01 ingressTemplate) so F5 merges its /.well-known/acme-challenge path into the host.
-ssl-redirect is forced off (F5 otherwise 301s HTTP->HTTPS, breaking the HTTP-01 challenge
-on port 80 and the renewals). TLS is per host: each master owns its own single-SAN
+ssl-redirect stays off; the controller's shared config redirects HTTP except the HTTP-01
+challenge path. TLS is per host: each master owns its own single-SAN
 Certificate/Secret (two masters cannot share one secret).
 */}}
 {{- $ip := required "global.sslipIp must be set" .Values.global.sslipIp -}}
@@ -83,6 +83,16 @@ metadata:
     app.kubernetes.io/managed-by: {{ $.Release.Service }}
   annotations:
     nginx.org/mergeable-ingress-type: "minion"
+    {{- if $.Values.ingress.protection.enabled }}
+    nginx.org/limit-req-rate: {{ ternary $.Values.ingress.protection.apiRate $.Values.ingress.protection.appRate (hasPrefix "api" $h.role) | quote }}
+    nginx.org/limit-req-burst: {{ ternary $.Values.ingress.protection.apiBurst $.Values.ingress.protection.appBurst (hasPrefix "api" $h.role) | quote }}
+    nginx.org/limit-req-no-delay: "true"
+    nginx.org/limit-req-reject-code: "429"
+    nginx.org/client-max-body-size: {{ $.Values.ingress.protection.bodySize | quote }}
+    nginx.org/proxy-connect-timeout: "5s"
+    nginx.org/proxy-read-timeout: "60s"
+    nginx.org/proxy-send-timeout: "30s"
+    {{- end }}
 spec:
   ingressClassName: {{ $.Values.ingress.className | quote }}
   rules:
@@ -96,5 +106,36 @@ spec:
                 name: {{ $h.svc | quote }}
                 port:
                   number: {{ $h.port }}
+{{- if and $.Values.ingress.protection.enabled (hasPrefix "api" $h.role) }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: modelmatch-{{ $h.role }}-auth
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+    nginx.org/mergeable-ingress-type: "minion"
+    nginx.org/limit-req-rate: {{ $.Values.ingress.protection.authRate | quote }}
+    nginx.org/limit-req-burst: {{ $.Values.ingress.protection.authBurst | quote }}
+    nginx.org/limit-req-no-delay: "true"
+    nginx.org/limit-req-reject-code: "429"
+    nginx.org/client-max-body-size: {{ $.Values.ingress.protection.authBodySize | quote }}
+    nginx.org/proxy-connect-timeout: "5s"
+    nginx.org/proxy-read-timeout: "15s"
+    nginx.org/proxy-send-timeout: "15s"
+spec:
+  ingressClassName: {{ $.Values.ingress.className | quote }}
+  rules:
+    - host: {{ $h.host | quote }}
+      http:
+        paths:
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $h.svc | quote }}
+                port:
+                  number: {{ $h.port }}
+{{- end }}
 {{- end }}
 {{- end }}

@@ -17,3 +17,6 @@ secrets.yaml
 
 # draw.io backups
 *drawio.bkp
+# Python chart verification helpers
+__pycache__/
+*.pyc
