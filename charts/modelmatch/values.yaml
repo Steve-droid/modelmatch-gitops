@@ -33,9 +33,9 @@ global:
   sslipIp: "3.111.156.216"
   # P38m: set both names to provision branded ingress/certificates first. Only then
   # switch useCustomHosts on to move browser traffic and newly generated CI snippets.
-  # Custom DNS deferred by Steve after registration failed (2026-09-09).
-  appHost: ""
-  apiHost: ""
+  # Registered at Porkbun; stage HTTPS before the separate runtime URL switch.
+  appHost: "modicum.cloud"
+  apiHost: "api.modicum.cloud"
   useCustomHosts: false
   # Keep original ingress names/certificates and old Jenkins snippets working.
   retainSslipHosts: true
