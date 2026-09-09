@@ -85,7 +85,7 @@ backend:
     # charts/modelmatch-postgres/values.yaml + FORCE a sync of modelmatch-postgres FIRST,
     # then bump this Deployment tag (2026-09-09: auto-sync rolled 1.0.17 onto the
     # unmigrated schema and project reads 500'd until a hotfix pin to 1.0.16).
-    tag: "1.0.18"
+    tag: "1.0.19"
     pullPolicy: IfNotPresent
   containerPort: 8000
   # IRSA (P14): the backend SA assumes role A (Bedrock + S3) — no static keys. The SA
@@ -132,8 +132,8 @@ backend:
     # refs, pinned to the agent release (agent-v1.1.0, P38d); the user's Jenkins node
     # pulls them with its own registry credentials (no public mirror in this phase).
     # Unset, the backend would emit its `modelmatch-agent:latest` defaults.
-    AGENT_IMAGE: "957261948820.dkr.ecr.ap-south-1.amazonaws.com/modelmatch-agent:1.1.1"
-    AGENT_SECURITY_IMAGE: "957261948820.dkr.ecr.ap-south-1.amazonaws.com/modelmatch-agent-security:1.1.1"
+    AGENT_IMAGE: "957261948820.dkr.ecr.ap-south-1.amazonaws.com/modelmatch-agent:1.1.2"
+    AGENT_SECURITY_IMAGE: "957261948820.dkr.ecr.ap-south-1.amazonaws.com/modelmatch-agent-security:1.1.2"
     QUALITY_THRESHOLD: "0.8"
     AWS_REGION: "ap-south-1"
     BEDROCK_MODEL_ID: "apac.amazon.nova-lite-v1:0"
@@ -153,7 +153,7 @@ frontend:
   replicaCount: 1
   image:
     repository: modelmatch-frontend
-    tag: "1.0.16"
+    tag: "1.0.17"
     pullPolicy: IfNotPresent
   containerPort: 8080 # nginx-unprivileged listens on 8080 (uid 101)
   service:
