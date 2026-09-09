@@ -124,8 +124,8 @@ backend:
     # refs, pinned to the agent release (agent-v1.1.0, P38d); the user's Jenkins node
     # pulls them with its own registry credentials (no public mirror in this phase).
     # Unset, the backend would emit its `modelmatch-agent:latest` defaults.
-    AGENT_IMAGE: "957261948820.dkr.ecr.ap-south-1.amazonaws.com/modelmatch-agent:1.1.0"
-    AGENT_SECURITY_IMAGE: "957261948820.dkr.ecr.ap-south-1.amazonaws.com/modelmatch-agent-security:1.1.0"
+    AGENT_IMAGE: "957261948820.dkr.ecr.ap-south-1.amazonaws.com/modelmatch-agent:1.1.1"
+    AGENT_SECURITY_IMAGE: "957261948820.dkr.ecr.ap-south-1.amazonaws.com/modelmatch-agent-security:1.1.1"
     QUALITY_THRESHOLD: "0.8"
     AWS_REGION: "ap-south-1"
     BEDROCK_MODEL_ID: "apac.amazon.nova-lite-v1:0"
