@@ -101,7 +101,7 @@ migrate:
     # Registry host is derived from global.awsAccountId + global.awsRegion (P33b);
     # `registry` may be set here as an explicit override.
     repository: modelmatch-backend
-    tag: "1.0.17"
+    tag: "1.0.20"
     pullPolicy: IfNotPresent
   resources:
     requests:
@@ -112,15 +112,16 @@ migrate:
       memory: 512Mi
 # ── Auto-seed Jobs (P30, PostSync hooks AFTER migrate) ────────────────────────
 # Two-tier, both deterministic / zero-token:
-#   • Catalog (sync-wave 10, ALWAYS) — reference rows the recommender ranks over;
-#     idempotent upsert. Rendered unconditionally.
+#   • Catalog (sync-wave 10, GATED by `catalog`) — reference rows for recommendations.
 #   • Demo dataset (sync-wave 20, GATED by `demo`) — a demo user + project + a spread
 #     of CI runs so a fresh bring-up shows a populated dashboard with no manual steps.
 # A non-demo env sets `demo: false` and ships zero fixtures. The demo user's LOGIN
 # password is NOT here — it arrives via ESO (DEMO_SEED_PASSWORD in the app Secret).
 seed:
-  # ON for this portfolio/demo env. The only knob that turns the demo dataset off.
-  demo: true
+  # Existing populated environment: migration-only syncs must not run either seed.
+  # A separately reviewed fresh bootstrap may explicitly enable both flags.
+  catalog: false
+  demo: false
   # Non-secret demo identifiers. The email is a login id (already public via the LE
   # issuer contact), not a credential; project name + run count shape the dashboard.
   email: stevelevit230@gmail.com
