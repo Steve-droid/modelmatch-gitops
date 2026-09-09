@@ -97,7 +97,7 @@ backend:
     # charts/modelmatch-postgres/values.yaml + FORCE a sync of modelmatch-postgres FIRST,
     # then bump this Deployment tag (2026-09-09: auto-sync rolled 1.0.17 onto the
     # unmigrated schema and project reads 500'd until a hotfix pin to 1.0.16).
-    tag: "1.0.22"
+    tag: "1.0.23"
     pullPolicy: IfNotPresent
   containerPort: 8000
   # IRSA (P14): the backend SA assumes role A (Bedrock + S3) — no static keys. The SA
@@ -178,7 +178,7 @@ frontend:
   replicaCount: 1
   image:
     repository: modelmatch-frontend
-    tag: "1.0.22"
+    tag: "1.0.23"
     pullPolicy: IfNotPresent
   containerPort: 8080 # nginx-unprivileged listens on 8080 (uid 101)
   service:
