@@ -61,6 +61,16 @@ config:
   S3_BUCKET: "modelmatch-ingestion-sources-957261948820"
   LLM_CLIENT: "bedrock"
   LLM_HOURLY_TOKEN_CAP: "200000"
+  MAX_REGISTERED_USERS: "700"
+  CHAT_ENABLED: "true"
+  AUTH_RATE_LIMIT_ENABLED: "true"
+  AUTH_REQUESTS_PER_MINUTE: "120"
+  AUTH_BURST: "4"
+  DB_POOL_SIZE: "5"
+  DB_MAX_OVERFLOW: "5"
+  CHAT_DB_POOL_SIZE: "2"
+  CHAT_DB_MAX_OVERFLOW: "2"
+  DB_POOL_TIMEOUT: "5"
   # P15: PUBLIC_BASE_URL + CORS_ALLOW_ORIGINS are derived from global.sslipIp in the
   # ConfigMap template (single source of truth) — not literals here.
   # Passwordless DSN (non-secret) — the password comes from PGPASSWORD (P14 secret env).
