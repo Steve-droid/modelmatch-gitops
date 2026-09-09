@@ -1,9 +1,10 @@
+{{- if .Values.seed.catalog }}
 {{- $img := include "postgres.migrateImage" . -}}
 # Catalog auto-seed Job (P30) — `python -m app.catalog.seed`, an ArgoCD PostSync HOOK.
 #
 # WHY here + WHY this order: the catalog is reference data the recommender ranks over,
-# so it must exist after every sync. It is idempotent by construction (load_seed
-# upserts per natural key) and deterministic — NO LLM, zero tokens.
+# so fresh bootstrap explicitly enables seed.catalog. Existing environments keep
+# it disabled to avoid reseeding during schema updates. The seed is deterministic.
 #
 # Ordering: ArgoCD runs PostSync hooks in hook-weight order and waits for each to
 # COMPLETE before the next weight. The migrate Job (no weight = 0) creates the schema
@@ -66,3 +67,4 @@ spec:
                   key: JWT_SECRET
           resources:
             {{- toYaml .Values.migrate.resources | nindent 12 }}
+{{- end }}
