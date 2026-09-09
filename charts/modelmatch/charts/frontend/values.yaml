@@ -10,6 +10,10 @@ global:
   # P15: public-host source of truth, normally injected by the umbrella. The ConfigMap
   # derives API_BASE_URL from it; this default keeps standalone render working.
   sslipIp: "0.0.0.0"
+  appHost: ""
+  apiHost: ""
+  useCustomHosts: false
+  retainSslipHosts: true
 
 image:
   repository: modelmatch-frontend

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "global": {
+      "type": "object",
+      "required": [
+        "appHost",
+        "apiHost",
+        "useCustomHosts",
+        "retainSslipHosts"
+      ],
+      "properties": {
+        "appHost": {
+          "type": "string",
+          "pattern": "^$|^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]([a-z0-9-]{0,61}[a-z0-9])?$",
+          "maxLength": 253
+        },
+        "apiHost": {
+          "type": "string",
+          "pattern": "^$|^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]([a-z0-9-]{0,61}[a-z0-9])?$",
+          "maxLength": 253
+        },
+        "useCustomHosts": {
+          "type": "boolean"
+        },
+        "retainSslipHosts": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "appHost": {
+                "minLength": 1
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "apiHost": {
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "apiHost": {
+                "minLength": 1
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "appHost": {
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "useCustomHosts": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "appHost": {
+                "minLength": 1
+              },
+              "apiHost": {
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "retainSslipHosts": {
+                "const": false
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "useCustomHosts": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,6 +1,10 @@
 # CLAUDE.md — modelmatch-gitops
 
-**Status: ACTIVE.** The GitOps repo for ModelMatch: the Helm umbrella + (later) ArgoCD app-of-apps that
+> **2026-09-09 update — custom DNS deferred:** AWS rejected the domain registration without a specific cause in its email. Steve chose to keep sslip.io HTTPS for P38m. DNS infrastructure and hostname support are prepared for later; do not register, import, apply or activate them as part of the rebrand release.
+
+> Modicum was previously ModelMatch. Repository and infrastructure identifiers retain `modelmatch` for compatibility.
+
+**Status: ACTIVE.** The GitOps repo for Modicum: the Helm umbrella + (later) ArgoCD app-of-apps that
 deploy the cluster. Activated at **P9 (2026-06-14)** when the Helm umbrella was authored.
 
 > Polyrepo: this is its **own git repo** — branches/commits/tags happen **here**, not in
@@ -11,7 +15,7 @@ deploy the cluster. Activated at **P9 (2026-06-14)** when the Helm umbrella was 
 
 The **GitOps source of truth** for everything that runs *inside* the EKS cluster. Two layers:
 
-1. **The ModelMatch product chart** — `charts/modelmatch/`, a Helm **umbrella** with **frontend** +
+1. **The Modicum product chart** — `charts/modelmatch/`, a Helm **umbrella** with **frontend** +
    **backend** local subcharts (Postgres subchart lands in **P13**). One release boundary for the app.
 2. **ArgoCD app-of-apps** (from **P10**) — a root Application that points at this repo and fans out to
    platform child-apps (Nginx ingress, cert-manager, ESO, monitoring, logging) + the product chart.
@@ -24,7 +28,7 @@ Humans author chart structure; the CI Deploy stage edits image tags; ArgoCD sync
 ## Chart layout
 
 ```
-charts/modelmatch/                 # umbrella = the ModelMatch product chart (release boundary)
+charts/modelmatch/                 # umbrella = the Modicum product chart (release boundary)
 ├── Chart.yaml                     # dependencies: backend, frontend (local, condition <name>.enabled)
 ├── values.yaml                    # global.awsAccountId/awsRegion + global.sslipIp + backend:/frontend: blocks
 ├── templates/NOTES.txt            # render summary (no workload templates at umbrella level)
@@ -74,3 +78,11 @@ charts/modelmatch/                 # umbrella = the ModelMatch product chart (re
   trailer**, **SSH remote**.
 
 > See `../docs/planning/architecture.md` §12–§13 and `../docs/instructions/lesson-03` (Infrastructure/Helm).
+
+## P38m public hostname rollout
+
+`global.appHost`/`apiHost` stage new ingress and cert-manager TLS alongside the legacy hosts.
+`useCustomHosts` switches FE runtime API URL + BE public URL only after DNS and certificate checks.
+Keep `retainSslipHosts=true` for existing browser origins/Jenkins snippets. Rollback only the switch;
+retain both ingress sets. `recompute-host.sh` refuses custom-host configurations. See the README
+and infra `dns/README.md`; domain registration/zone import/DNS apply are still pending.

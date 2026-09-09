@@ -1,4 +1,4 @@
-# Umbrella values — the single place to configure the ModelMatch product chart.
+# Umbrella values — the single place to configure the Modicum product chart.
 #
 # Layout intent (so env overrides layer cleanly later, e.g. values-dev.yaml):
 #   global:    shared knobs handed to every subchart (image registry).
@@ -31,6 +31,14 @@ global:
   # "0.0.0.0" is the not-yet-computed sentinel (renders a valid-but-dead host so
   # `helm lint`/`template` pass; it never routes — run the script before syncing).
   sslipIp: "3.111.156.216"
+  # P38m: set both names to provision branded ingress/certificates first. Only then
+  # switch useCustomHosts on to move browser traffic and newly generated CI snippets.
+  # Custom DNS deferred by Steve after registration failed (2026-09-09).
+  appHost: ""
+  apiHost: ""
+  useCustomHosts: false
+  # Keep original ingress names/certificates and old Jenkins snippets working.
+  retainSslipHosts: true
 # P15 — routing + TLS behind P11's ONE F5 nginx ELB. Host-based: app.<ip> -> frontend,
 # api.<ip> -> backend (backend stays at root, no rewrite). cert-manager issues the certs
 # via the cluster-issuer annotation.

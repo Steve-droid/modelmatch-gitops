@@ -26,6 +26,14 @@ command -v kubectl >/dev/null || { echo "ERROR: kubectl not found in PATH"; exit
 command -v dig     >/dev/null || { echo "ERROR: dig not found in PATH"; exit 1; }
 [ -f "$VALUES" ] || { echo "ERROR: values file not found: $VALUES"; exit 1; }
 
+# With branded hosts configured, refreshing sslipIp would silently retire old
+# Jenkins endpoints. Refresh the Route 53 NLB target through the infra DNS runbook.
+if grep -Eq '^[[:space:]]*(appHost|apiHost):[[:space:]]*"?[a-z0-9]' "$VALUES"; then
+  echo "ERROR: custom hosts are configured; leave sslipIp unchanged for existing clients."
+  echo "       refresh the NLB alias target using the infra dns/ runbook instead."
+  exit 1
+fi
+
 echo "==> [read-only] ingress ELB hostname from svc/${SVC} in ns/${NS}"
 ELB_DNS="$(kubectl -n "$NS" get svc "$SVC" \
   -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)"
