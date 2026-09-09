@@ -101,7 +101,7 @@ migrate:
     # Registry host is derived from global.awsAccountId + global.awsRegion (P33b);
     # `registry` may be set here as an explicit override.
     repository: modelmatch-backend
-    tag: "1.0.20"
+    tag: "1.0.21"
     pullPolicy: IfNotPresent
   resources:
     requests:
