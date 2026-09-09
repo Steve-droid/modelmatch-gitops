@@ -36,9 +36,14 @@ class PublicHostTests(unittest.TestCase):
                          {"https://" + host for host in origins})
 
     def test_no_custom_hosts_preserves_original_routes_and_urls(self):
-        docs = objects(render())
+        docs = objects(render("global.appHost=", "global.apiHost="))
         self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 4)
         self.assert_urls(docs, LEGACY_API, [LEGACY_APP])
+
+    def test_committed_values_stage_https_before_runtime_cutover(self):
+        docs = objects(render())
+        self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 8)
+        self.assert_urls(docs, LEGACY_API, [LEGACY_APP, "modicum.cloud"])
 
     def test_stage_certificates_keeps_runtime_on_original_api(self):
         docs = objects(render_custom())

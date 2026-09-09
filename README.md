@@ -1,6 +1,6 @@
 # Modicum — Gitops
 
-> **2026-09-09 update — custom DNS deferred:** AWS rejected the domain registration without a specific cause in its email. Steve chose to keep sslip.io HTTPS for P38m. DNS infrastructure and hostname support are prepared for later; do not register, import, apply or activate them as part of the rebrand release.
+> **2026-09-09 DNS follow-up:** Steve registered modicum.cloud at Porkbun and chose to connect now. This change stages branded HTTPS alongside sslip.io; runtime URL cutover is a separate reviewed rollout after DNS and certificates pass verification. Local preparation only; deployment pending.
 
 > Modicum was previously ModelMatch. Repository and infrastructure identifiers retain `modelmatch` for compatibility.
 
@@ -193,8 +193,8 @@ Steve Levit — stevelevit230@gmail.com
 
 ## Branded hosts: Modicum DNS cutover (P38m, staged)
 
-Selected names: **modicum.cloud** (app), **api.modicum.cloud** (API). Domain registration and
-DNS/HTTPS cutover are pending; current live clients still use the sslip.io hosts.
+Selected names: **modicum.cloud** (app), **api.modicum.cloud** (API). Registration at Porkbun is complete;
+Route 53 delegation and DNS/HTTPS deployment are pending. Current live clients use sslip.io.
 
 `global.appHost` and `global.apiHost` create additional F5 master/minion ingress pairs and
 separate single-host cert-manager certificates. **`global.useCustomHosts: false` is deliberate:**
@@ -206,7 +206,7 @@ API endpoint and do not need POST redirects. Pod config checksums trigger the re
 
 With custom names set, `scripts/recompute-host.sh` fails before editing anything: changing the old
 IP would retire existing snippets. Refresh Route 53's alias target through the infra
-[DNS runbook](../modelmatch-infra/dns/README.md). That runbook covers registration/zone import,
+[DNS runbook](../modelmatch-infra/dns/README.md). That runbook covers Porkbun delegation to the Terraform-created zone,
 Terraform plan, certificate staging, cutover, rollback, rebuilds, and final teardown.
 A domain change does not migrate browser storage; sign in at the new origin.
 
@@ -225,5 +225,6 @@ bash -n scripts/recompute-host.sh
 
 The render tests cover the original configuration, staged certificates, runtime cutover,
 legacy retirement, unique certificates/F5 routes, config rollout checksums, and rejected inputs.
-The main values leave custom hostnames empty and retain current image versions; image publication
-and the second URL-switch commit are release steps after review.
+The committed values stage both custom hostnames with `useCustomHosts: false` and retain
+current image versions. DNS needs no application rebuild, migration, seed or postgres-app
+sync. ArgoCD deploys the product chart after review; the URL switch is a second reviewed commit.
