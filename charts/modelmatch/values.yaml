@@ -85,7 +85,7 @@ backend:
     # charts/modelmatch-postgres/values.yaml + FORCE a sync of modelmatch-postgres FIRST,
     # then bump this Deployment tag (2026-09-09: auto-sync rolled 1.0.17 onto the
     # unmigrated schema and project reads 500'd until a hotfix pin to 1.0.16).
-    tag: "1.0.19"
+    tag: "1.0.20"
     pullPolicy: IfNotPresent
   containerPort: 8000
   # IRSA (P14): the backend SA assumes role A (Bedrock + S3) — no static keys. The SA
@@ -114,6 +114,8 @@ backend:
   # Non-secret config only -> ConfigMap -> envFrom. Pydantic reads these by
   # uppercase field name. Secrets are intentionally absent (P12, ESO).
   config:
+    # Enable only after frontend and migration verification. Public ID, never a secret.
+    GOOGLE_CLIENT_ID: ""
     BASELINE_MODEL_ID: "Claude Sonnet 4.5"
     # P38c: per-task baselines. Each task is measured by its own benchmark and so
     # deserves its own "expensive default". BASELINE_MODEL_ID above stays the

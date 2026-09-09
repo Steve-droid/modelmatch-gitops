@@ -52,6 +52,8 @@ resources:
     memory: 1Gi
 
 config:
+  # Optional public Google OAuth WEB client ID (not a secret).
+  GOOGLE_CLIENT_ID: ""
   BASELINE_MODEL_ID: "Claude Sonnet 4.5"
   QUALITY_THRESHOLD: "0.8"
   AWS_REGION: "ap-south-1"
