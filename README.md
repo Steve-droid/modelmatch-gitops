@@ -1,6 +1,6 @@
 # Modicum — Gitops
 
-> **2026-09-09 DNS follow-up:** Steve registered modicum.cloud at Porkbun and chose to connect now. This change stages branded HTTPS alongside sslip.io; runtime URL cutover is a separate reviewed rollout after DNS and certificates pass verification. Local preparation only; deployment pending.
+> **2026-09-09 DNS follow-up:** Route 53 delegation and trusted HTTPS are verified for modicum.cloud and api.modicum.cloud. These values prepare the reviewed runtime URL cutover; legacy sslip.io routes remain available. Cutover deployment is pending.
 
 > Modicum was previously ModelMatch. Repository and infrastructure identifiers retain `modelmatch` for compatibility.
 
@@ -194,7 +194,8 @@ Steve Levit — stevelevit230@gmail.com
 ## Branded hosts: Modicum DNS cutover (P38m, staged)
 
 Selected names: **modicum.cloud** (app), **api.modicum.cloud** (API). Registration at Porkbun is complete;
-Route 53 delegation and DNS/HTTPS deployment are pending. Current live clients use sslip.io.
+Route 53 delegation and both trusted HTTPS endpoints are verified. The live runtime still uses
+sslip.io until this cutover commit is reviewed and deployed.
 
 `global.appHost` and `global.apiHost` create additional F5 master/minion ingress pairs and
 separate single-host cert-manager certificates. **`global.useCustomHosts: false` is deliberate:**
@@ -225,6 +226,9 @@ bash -n scripts/recompute-host.sh
 
 The render tests cover the original configuration, staged certificates, runtime cutover,
 legacy retirement, unique certificates/F5 routes, config rollout checksums, and rejected inputs.
-The committed values stage both custom hostnames with `useCustomHosts: false` and retain
-current image versions. DNS needs no application rebuild, migration, seed or postgres-app
-sync. ArgoCD deploys the product chart after review; the URL switch is a second reviewed commit.
+The values now set `useCustomHosts: true` for the second reviewed rollout, while
+`retainSslipHosts: true` preserves compatibility. DNS needs no application rebuild, migration,
+seed or postgres-app sync. ArgoCD deploys the product chart after review. Live checks on
+2026-09-09 confirmed HTTPS 200 and trusted single-host certificates for app and API, including
+both NLB addresses, plus branded API login/dashboard reads. Passwords/tokens stayed in process;
+chat was skipped. Re-run runtime config, login, dashboard and CI-setup checks after cutover.
