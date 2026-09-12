@@ -1,6 +1,6 @@
 # Driftplain — Gitops
 
-> **P38r (prepared September 12, 2026):** Driftplain / driftplain.dev is the selected rebrand, pending review and release. Modicum at modicum.cloud remains live. Internal modelmatch identifiers are retained.
+> **P38r — shipped September 12, 2026:** Driftplain is live at **https://driftplain.dev**, with **https://api.driftplain.dev** as its runtime API. Trusted HTTPS, Google domain ownership, published Google branding and real sign-in are verified. Modicum/sslip.io endpoints and operational identifiers remain compatible. FE/BE 1.0.24, agents 1.1.3; runtime cutover GitOps v0.18.22.
 
 
 > **2026-09-09 DNS follow-up:** Route 53 delegation and trusted HTTPS are verified for modicum.cloud and api.modicum.cloud. These values prepare the reviewed runtime URL cutover; legacy sslip.io routes remain available. Cutover deployment is pending.
