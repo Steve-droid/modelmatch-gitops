@@ -19,7 +19,7 @@ def render(*values):
 
 def render_custom(*values):
     return render("global.appHost=modicum.cloud", "global.apiHost=api.modicum.cloud",
-                  "global.useCustomHosts=false", "global.additionalHosts.driftplain.enabled=false", *values)
+                  "global.useCustomHosts=false", "global.runtimeHostSet=", "global.additionalHosts.driftplain.enabled=false", *values)
 
 def objects(result):
     assert result.returncode == 0, result.stderr
@@ -37,14 +37,14 @@ class PublicHostTests(unittest.TestCase):
                          {"https://" + host for host in origins})
 
     def test_no_custom_hosts_preserves_original_routes_and_urls(self):
-        docs = objects(render("global.appHost=", "global.apiHost=", "global.useCustomHosts=false", "global.additionalHosts.driftplain.enabled=false"))
+        docs = objects(render("global.appHost=", "global.apiHost=", "global.useCustomHosts=false", "global.runtimeHostSet=", "global.additionalHosts.driftplain.enabled=false"))
         self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 5)
         self.assert_urls(docs, LEGACY_API, [LEGACY_APP])
 
-    def test_committed_values_use_branded_api_and_retain_legacy_hosts(self):
+    def test_committed_values_use_driftplain_api_and_retain_existing_hosts(self):
         docs = objects(render())
         self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 15)
-        self.assert_urls(docs, "api.modicum.cloud", [LEGACY_APP, "modicum.cloud", "driftplain.dev"])
+        self.assert_urls(docs, "api.driftplain.dev", [LEGACY_APP, "modicum.cloud", "driftplain.dev"])
 
     def test_stage_certificates_keeps_runtime_on_original_api(self):
         docs = objects(render_custom())
@@ -92,8 +92,8 @@ class PublicHostTests(unittest.TestCase):
 
 
     def test_rebrand_stage_preserves_every_existing_ingress(self):
-        original = objects(render("global.additionalHosts.driftplain.enabled=false"))
-        staged = objects(render())
+        original = objects(render("global.runtimeHostSet=", "global.additionalHosts.driftplain.enabled=false"))
+        staged = objects(render("global.runtimeHostSet="))
         for key, obj in original.items():
             if key[0] == "Ingress":
                 self.assertEqual(staged[key], obj)
@@ -108,7 +108,7 @@ class PublicHostTests(unittest.TestCase):
         self.assertIn(("Ingress", "modelmatch-api-driftplain-auth"), staged)
 
     def test_rebrand_cutover_changes_runtime_without_replacing_ingress(self):
-        staged = objects(render())
+        staged = objects(render("global.runtimeHostSet="))
         active = objects(render("global.runtimeHostSet=driftplain"))
         self.assert_urls(active, "api.driftplain.dev", [LEGACY_APP, "modicum.cloud", "driftplain.dev"])
         self.assertEqual({k: v for k, v in staged.items() if k[0] == "Ingress"},
