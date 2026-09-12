@@ -269,15 +269,14 @@ users exist, do not blindly restore pre-Google backend code (it assumes non-null
 or run the migration downgrade (it removes Google identity associations).
 
 
-## Driftplain transition (P38r; pending)
+## Driftplain transition (P38r; September 12, 2026)
 
 Committed values stage the enabled `global.additionalHosts.driftplain` app/API pair, producing
 five extra protected F5 ingress objects with distinct TLS secrets. Existing ingress objects,
-image pins, migration/seed charts, Google client ID and runtime URLs are preserved. Backend
-CORS adds the exact new app origin. `global.runtimeHostSet` is empty during staging.
+migration/seed charts and Google client ID are preserved. Backend
+CORS accepts the exact new app origin. `global.runtimeHostSet=driftplain` selects the new runtime; an empty selector retains the prior api.modicum.cloud runtime.
 
-After registration, DNS, trusted HTTPS and Google origins are verified, set `runtimeHostSet`
-to `driftplain` in the committed umbrella values. Both public URL ConfigMaps then select
+Registration, delegation, trusted HTTPS, Google domain ownership and the retained OAuth client origin are verified. Google verified and published Driftplain branding. Both public URL ConfigMaps select
 `https://api.driftplain.dev`; all existing hosts continue to serve directly. Runtime rollback
 sets the selector back to an empty string and leaves the additional pair enabled. Set a host
 set's `enabled=false` only when intentionally retiring its routes and CORS origin; a disabled

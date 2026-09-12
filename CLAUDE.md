@@ -1,6 +1,6 @@
 # CLAUDE.md — modelmatch-gitops
 
-> **P38r (September 12, 2026):** driftplain.dev is selected but not registered/released. Stage additional protected hosts while retaining live modicum.cloud and sslip.io. Select the new runtime host set only after trusted HTTPS and Google-origin verification.
+> **P38r (September 12, 2026):** Driftplain DNS and trusted app/API HTTPS are verified; the existing Google client has the new origin, verified ownership and published branding. `runtimeHostSet=driftplain` selects api.driftplain.dev while retaining Modicum and sslip.io.
 
 > Driftplain was previously Modicum / ModelMatch. Repository and infrastructure identifiers retain `modelmatch` for compatibility.
 
@@ -85,4 +85,4 @@ charts/modelmatch/                 # umbrella = the Driftplain product chart (re
 `useCustomHosts` switches FE runtime API URL + BE public URL only after DNS and certificate checks.
 Keep `retainSslipHosts=true` for existing browser origins/Jenkins snippets. Rollback only the switch;
 retain both ingress sets. `recompute-host.sh` refuses custom-host configurations. See the README
-and infra `dns/README.md`; the Modicum rollout is live; the additional Driftplain domain remains pending.
+and infra `dns/README.md`; both Modicum and Driftplain domains are retained. Revert only the runtime selector for rollback.

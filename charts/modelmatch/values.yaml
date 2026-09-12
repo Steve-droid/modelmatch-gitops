@@ -39,9 +39,9 @@ global:
   useCustomHosts: true
   # Keep original ingress names/certificates and old Jenkins snippets working.
   retainSslipHosts: true
-  # P38r: stage new DNS/TLS while keeping modicum.cloud as the runtime endpoint.
-  # Select "driftplain" only after trusted HTTPS and the Google origin are verified.
-  runtimeHostSet: ""
+  # P38r: Driftplain runtime; Modicum and sslip.io hosts remain compatible.
+  # DNS, trusted HTTPS, and the existing Google client origin are verified.
+  runtimeHostSet: "driftplain"
   additionalHosts:
     driftplain:
       enabled: true
