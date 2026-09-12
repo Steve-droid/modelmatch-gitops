@@ -1,4 +1,4 @@
-# Umbrella values — the single place to configure the Modicum product chart.
+# Umbrella values — the single place to configure the Driftplain product chart.
 #
 # Layout intent (so env overrides layer cleanly later, e.g. values-dev.yaml):
 #   global:    shared knobs handed to every subchart (image registry).
@@ -39,6 +39,14 @@ global:
   useCustomHosts: true
   # Keep original ingress names/certificates and old Jenkins snippets working.
   retainSslipHosts: true
+  # P38r: stage new DNS/TLS while keeping modicum.cloud as the runtime endpoint.
+  # Select "driftplain" only after trusted HTTPS and the Google origin are verified.
+  runtimeHostSet: ""
+  additionalHosts:
+    driftplain:
+      enabled: true
+      appHost: "driftplain.dev"
+      apiHost: "api.driftplain.dev"
 # P15 — routing + TLS behind P11's ONE F5 nginx ELB. Host-based: app.<ip> -> frontend,
 # api.<ip> -> backend (backend stays at root, no rewrite). cert-manager issues the certs
 # via the cluster-issuer annotation.

@@ -16,6 +16,8 @@ global:
   apiHost: ""
   useCustomHosts: false
   retainSslipHosts: true
+  runtimeHostSet: ""
+  additionalHosts: {}
 
 image:
   repository: modelmatch-backend

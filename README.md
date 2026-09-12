@@ -1,11 +1,14 @@
-# Modicum — Gitops
+# Driftplain — Gitops
+
+> **P38r (prepared September 12, 2026):** Driftplain / driftplain.dev is the selected rebrand, pending review and release. Modicum at modicum.cloud remains live. Internal modelmatch identifiers are retained.
+
 
 > **2026-09-09 DNS follow-up:** Route 53 delegation and trusted HTTPS are verified for modicum.cloud and api.modicum.cloud. These values prepare the reviewed runtime URL cutover; legacy sslip.io routes remain available. Cutover deployment is pending.
 
-> Modicum was previously ModelMatch. Repository and infrastructure identifiers retain `modelmatch` for compatibility.
+> Driftplain was previously Modicum / ModelMatch. Repository and infrastructure identifiers retain `modelmatch` for compatibility.
 
 > **ACTIVE** (since P9). The GitOps source of truth for everything that runs **inside** the EKS cluster —
-> a Helm umbrella + an ArgoCD **App-of-Apps**. Part of the [Modicum portfolio build](../CLAUDE.md);
+> a Helm umbrella + an ArgoCD **App-of-Apps**. Part of the [Driftplain portfolio build](../CLAUDE.md);
 > spec in [`../docs/planning/architecture.md`](../docs/planning/architecture.md) §12–§13 and
 > `../docs/instructions/lesson-03`. See [`CLAUDE.md`](CLAUDE.md) for the chart layout + hard rules.
 
@@ -25,7 +28,7 @@
 
 The GitOps repo holds the desired state of the cluster. Two layers:
 
-1. **The Modicum product chart** — `charts/modelmatch/`, a Helm **umbrella** with **frontend** +
+1. **The Driftplain product chart** — `charts/modelmatch/`, a Helm **umbrella** with **frontend** +
    **backend** local subcharts plus the host-based `Ingress` templates. One release boundary for the app.
 2. **Platform charts + ArgoCD App-of-Apps** — a Terraform-seeded **root Application** (in
    `modelmatch-infra/platform/argocd.tf`) watches `argocd/apps/` and fans out to one child `Application`
@@ -191,7 +194,7 @@ single-SAN cert (`modelmatch-app-tls` / `modelmatch-api-tls`).
 Steve Levit — stevelevit230@gmail.com
 </content>
 
-## Branded hosts: Modicum DNS cutover (P38m, staged)
+## Branded hosts: Driftplain DNS cutover (P38m, staged)
 
 Selected names: **modicum.cloud** (app), **api.modicum.cloud** (API). Registration at Porkbun is complete;
 Route 53 delegation and both trusted HTTPS endpoints are verified. The live runtime still uses
@@ -236,7 +239,7 @@ chat was skipped. Re-run runtime config, login, dashboard and CI-setup checks af
 
 ### Google sign-in and migration-only releases (P38n)
 
-`backend.config.GOOGLE_CLIENT_ID` is the existing Modicum Web public client ID. Its
+`backend.config.GOOGLE_CLIENT_ID` is the existing Driftplain Web public client ID. Its
 subchart default is blank (disabled); no Google client secret or ExternalSecret is used.
 Google's authorized JavaScript origin is `https://modicum.cloud`. Both legacy sslip.io
 routes remain for password sessions and existing API/CI clients. The public privacy page
@@ -264,3 +267,24 @@ changes. The proof must remain available for Google's periodic ownership checks.
 If Google auth needs disabling, blank its public client ID and roll forward. Once Google-only
 users exist, do not blindly restore pre-Google backend code (it assumes non-null passwords)
 or run the migration downgrade (it removes Google identity associations).
+
+
+## Driftplain transition (P38r; pending)
+
+Committed values stage the enabled `global.additionalHosts.driftplain` app/API pair, producing
+five extra protected F5 ingress objects with distinct TLS secrets. Existing ingress objects,
+image pins, migration/seed charts, Google client ID and runtime URLs are preserved. Backend
+CORS adds the exact new app origin. `global.runtimeHostSet` is empty during staging.
+
+After registration, DNS, trusted HTTPS and Google origins are verified, set `runtimeHostSet`
+to `driftplain` in the committed umbrella values. Both public URL ConfigMaps then select
+`https://api.driftplain.dev`; all existing hosts continue to serve directly. Runtime rollback
+sets the selector back to an empty string and leaves the additional pair enabled. Set a host
+set's `enabled=false` only when intentionally retiring its routes and CORS origin; a disabled
+set cannot be selected as the runtime. Do not remove domains using a null map override, since
+Helm coalesces global maps into subcharts. New keys must not use the reserved `branded` suffix.
+
+The new master/certificate secret names are `modelmatch-app-tls-driftplain` and
+`modelmatch-api-tls-driftplain`. Existing `*-branded` secrets belong to modicum.cloud and remain.
+The separately published agent images must exist in ECR before AGENT_IMAGE/AGENT_SECURITY_IMAGE
+are bumped. No postgres Application sync or seed/migration hook is needed for this rebrand.
