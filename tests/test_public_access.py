@@ -11,7 +11,7 @@ class PublicAccessTests(unittest.TestCase):
         rendered = subprocess.check_output(["helm", "template", "modelmatch", "charts/modelmatch"], text=True)
         docs = [d for d in yaml.safe_load_all(rendered) if d and d["kind"] == "Ingress"]
         api_hosts = {r["host"] for d in docs for r in d["spec"]["rules"] if r["host"].startswith("api.")}
-        self.assertEqual(len(api_hosts), 2)
+        self.assertEqual(api_hosts, {"api.modicum.cloud", "api.driftplain.dev", "api.3.111.156.216.sslip.io"})
         for host in api_hosts:
             routes = {p["path"]: d for d in docs for r in d["spec"]["rules"] if r["host"] == host
                       for p in r.get("http", {}).get("paths", [])}

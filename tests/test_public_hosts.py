@@ -19,7 +19,7 @@ def render(*values):
 
 def render_custom(*values):
     return render("global.appHost=modicum.cloud", "global.apiHost=api.modicum.cloud",
-                  "global.useCustomHosts=false", *values)
+                  "global.useCustomHosts=false", "global.additionalHosts.driftplain.enabled=false", *values)
 
 def objects(result):
     assert result.returncode == 0, result.stderr
@@ -37,14 +37,14 @@ class PublicHostTests(unittest.TestCase):
                          {"https://" + host for host in origins})
 
     def test_no_custom_hosts_preserves_original_routes_and_urls(self):
-        docs = objects(render("global.appHost=", "global.apiHost=", "global.useCustomHosts=false"))
+        docs = objects(render("global.appHost=", "global.apiHost=", "global.useCustomHosts=false", "global.additionalHosts.driftplain.enabled=false"))
         self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 5)
         self.assert_urls(docs, LEGACY_API, [LEGACY_APP])
 
     def test_committed_values_use_branded_api_and_retain_legacy_hosts(self):
         docs = objects(render())
-        self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 10)
-        self.assert_urls(docs, "api.modicum.cloud", [LEGACY_APP, "modicum.cloud"])
+        self.assertEqual(sum(kind == "Ingress" for kind, _ in docs), 15)
+        self.assert_urls(docs, "api.modicum.cloud", [LEGACY_APP, "modicum.cloud", "driftplain.dev"])
 
     def test_stage_certificates_keeps_runtime_on_original_api(self):
         docs = objects(render_custom())
@@ -89,6 +89,47 @@ class PublicHostTests(unittest.TestCase):
                        ("global.appHost=" + LEGACY_API,)]:
             with self.subTest(values=values):
                 self.assertNotEqual(render_custom(*values).returncode, 0)
+
+
+    def test_rebrand_stage_preserves_every_existing_ingress(self):
+        original = objects(render("global.additionalHosts.driftplain.enabled=false"))
+        staged = objects(render())
+        for key, obj in original.items():
+            if key[0] == "Ingress":
+                self.assertEqual(staged[key], obj)
+        self.assertEqual(len(set(staged) - set(original)), 5)
+        for role, host in [("app", "driftplain.dev"), ("api", "api.driftplain.dev")]:
+            master = staged["Ingress", f"modelmatch-{role}-driftplain"]
+            self.assertEqual(master["spec"]["tls"][0]["hosts"], [host])
+            self.assertEqual(master["spec"]["tls"][0]["secretName"], f"modelmatch-{role}-tls-driftplain")
+            routes = staged["Ingress", f"modelmatch-{role}-driftplain-routes"]
+            self.assertEqual(routes["metadata"]["annotations"],
+                             original["Ingress", f"modelmatch-{role}-branded-routes"]["metadata"]["annotations"])
+        self.assertIn(("Ingress", "modelmatch-api-driftplain-auth"), staged)
+
+    def test_rebrand_cutover_changes_runtime_without_replacing_ingress(self):
+        staged = objects(render())
+        active = objects(render("global.runtimeHostSet=driftplain"))
+        self.assert_urls(active, "api.driftplain.dev", [LEGACY_APP, "modicum.cloud", "driftplain.dev"])
+        self.assertEqual({k: v for k, v in staged.items() if k[0] == "Ingress"},
+                         {k: v for k, v in active.items() if k[0] == "Ingress"})
+        for name in ["modelmatch-frontend", "modelmatch-backend"]:
+            before = staged["Deployment", name]["spec"]["template"]["metadata"]["annotations"]["checksum/config"]
+            after = active["Deployment", name]["spec"]["template"]["metadata"]["annotations"]["checksum/config"]
+            self.assertNotEqual(before, after)
+
+    def test_invalid_rebrand_settings_fail_closed(self):
+        for values in [
+            ("global.runtimeHostSet=missing",),
+            ("global.runtimeHostSet=driftplain", "global.additionalHosts.driftplain.enabled=false"),
+            ("global.runtimeHostSet=driftplain", "global.useCustomHosts=false"),
+            ("global.additionalHosts.driftplain.appHost=modicum.cloud",),
+            ("global.additionalHosts.driftplain.apiHost=driftplain.dev",),
+            ("global.additionalHosts.driftplain.appHost=https://driftplain.dev",),
+            ("global.additionalHosts.driftplain.apiHost=",),
+        ]:
+            with self.subTest(values=values):
+                self.assertNotEqual(render(*values).returncode, 0)
 
 
 if __name__ == "__main__":

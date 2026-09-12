@@ -1,4 +1,4 @@
-Modicum umbrella chart rendered (release: {{ .Release.Name }}).
+Driftplain umbrella chart rendered (release: {{ .Release.Name }}).
 
 This chart is authored-and-rendered only. It is NOT installed by hand — ArgoCD owns
 deployment from P14. Nothing is "Ready" from a `helm template` / `helm lint`.
@@ -14,3 +14,7 @@ Components in this render:
 Public host rollout: configure global.appHost/apiHost, verify certificates, then set
 useCustomHosts=true. Keep retainSslipHosts=true while old clients use the original URLs.
 Postgres, secrets and platform controllers are separate ArgoCD applications.
+
+Additional domain sets: {{ keys (.Values.global.additionalHosts | default dict) | sortAlpha | join ", " }}
+Runtime host set: {{ .Values.global.runtimeHostSet | default "original branded/sslip hosts" }}
+Select a runtimeHostSet only after DNS, trusted TLS, and OAuth origins are verified.

@@ -37,6 +37,18 @@ Certificate/Secret (two masters cannot share one secret).
       (dict "role" "app-branded" "host" .Values.global.appHost "svc" .Values.ingress.app.service "port" .Values.ingress.app.port "tls" (printf "%s-branded" .Values.ingress.app.tlsSecretName))
       (dict "role" "api-branded" "host" .Values.global.apiHost "svc" .Values.ingress.api.service "port" .Values.ingress.api.port "tls" (printf "%s-branded" .Values.ingress.api.tlsSecretName))) -}}
 {{- end -}}
+{{- range $name, $pair := .Values.global.additionalHosts -}}
+{{- if $pair.enabled -}}
+{{- $hosts = concat $hosts (list
+      (dict "role" (printf "app-%s" $name) "host" $pair.appHost "svc" $.Values.ingress.app.service "port" $.Values.ingress.app.port "tls" (printf "%s-%s" $.Values.ingress.app.tlsSecretName $name))
+      (dict "role" (printf "api-%s" $name) "host" $pair.apiHost "svc" $.Values.ingress.api.service "port" $.Values.ingress.api.port "tls" (printf "%s-%s" $.Values.ingress.api.tlsSecretName $name))) -}}
+{{- end -}}
+{{- end -}}
+{{- $seen := dict -}}
+{{- range $h := $hosts -}}
+{{- if hasKey $seen $h.host -}}{{ fail "All public app/API hosts must be distinct" }}{{- end -}}
+{{- $_ := set $seen $h.host true -}}
+{{- end -}}
 {{- range $h := $hosts }}
 ---
 # {{ $h.role }} host — MASTER: host + TLS + cert-manager; NO http paths (F5 master rule).

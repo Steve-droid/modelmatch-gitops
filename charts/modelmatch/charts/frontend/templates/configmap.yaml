@@ -12,6 +12,12 @@ data:
   {{- if .Values.global.useCustomHosts }}
   {{- $api = required "global.apiHost is required for custom hosts" .Values.global.apiHost }}
   {{- end }}
+  {{- if .Values.global.runtimeHostSet }}
+  {{- if not .Values.global.useCustomHosts }}{{ fail "runtimeHostSet requires useCustomHosts" }}{{ end }}
+  {{- $selected := required "runtimeHostSet must name an additionalHosts entry" (index (.Values.global.additionalHosts | default dict) .Values.global.runtimeHostSet) }}
+  {{- if not $selected.enabled }}{{ fail "runtimeHostSet must select an enabled host set" }}{{ end }}
+  {{- $api = required "Selected host set requires apiHost" $selected.apiHost }}
+  {{- end }}
   # Switched only after branded ingress certificates are ready. The entrypoint
   # templates this public URL into window.__APP_CONFIG__.
   API_BASE_URL: {{ printf "https://%s" $api | quote }}
